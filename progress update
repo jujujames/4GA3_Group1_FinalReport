@@ -1,0 +1,49 @@
+---
+title: "Group 1 project"
+author:
+  # Enter your name and student number here:
+- name: names
+  student_number: student numbers
+subject: "ENVSOCTY 4GA3: Applied Spatial Statistics"
+
+# Do not edit below this line unless you know what you are doing
+# --------------------------------------------------------------
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    # The project-template-default.tex file was heavily  adapted from Steven V. Miller's template for academic manuscripts. See:
+    # http://svmiller.com/blog/2016/02/svm-r-markdown-manuscript/
+    # https://github.com/svmiller/svm-r-markdown-templates/blob/master/svm-latex-ms.tex
+    template: exercise-template-default.tex
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align='center',
+                      out.width = "0.8\\linewidth")
+```
+
+```{r}
+
+library(sf)
+library(ggplot2)
+
+# Set the path to your shapefile
+shapefile_path <- "C:/Users/willd/OneDrive/Desktop/Neighbourhoods.shp"
+
+# Read the shapefile
+neighbourhood_data <- st_read(shapefile_path)
+
+# View the first few records to understand what the data looks like
+head(neighbourhood_data)
+
+# Print the structure of the sf object
+print(neighbourhood_data)
+
+# View summary of the sf object
+summary(neighbourhood_data)
+
+
+
+```
