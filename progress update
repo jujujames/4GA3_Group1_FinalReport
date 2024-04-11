@@ -25,9 +25,13 @@ knitr::opts_chunk$set(echo = TRUE,
 ```
 
 ```{r}
-
 library(sf)
 library(ggplot2)
+library(viridis)
+library(dplyr)
+library(broom)
+install.packages("ggpubr")
+library(ggpubr)
 
 # Set the path to your shapefile
 shapefile_path <- "C:/Users/willd/OneDrive/Desktop/Neighbourhoods.shp"
@@ -43,7 +47,41 @@ print(neighbourhood_data)
 
 # View summary of the sf object
 summary(neighbourhood_data)
+```
 
+```{r}
+ggplot(neighbourhood_data) +
+  geom_sf(aes(fill = Median_tot), color = NA, size = 0.1) +
+  scale_fill_gradient(low = "#FFCCCC", high = "#8B0000") +
+  coord_sf() +
+  labs(fill = "Median Total Income")
+
+ggplot(neighbourhood_data) +
+  geom_sf(aes(fill = Unemployme), color = NA, size = 0.1) +
+  scale_fill_gradient(low = "#FFCCCC", high = "#8B0000") +
+  coord_sf() +
+  labs(fill = "Unemployment")
+
+ggplot(neighbourhood_data) +
+  geom_sf(aes(fill = Auto_Theft), color = NA, size = 0.1) +
+  scale_fill_gradient(low = "#FFCCCC", high = "#8B0000") +
+  coord_sf() +
+  labs(fill = "Auto Theft")
+
+
+
+
+
+Scatter1 = ggplot(data=neighbourhood_data, aes(x=Median_tot, y=Auto_Theft))+geom_point(size=1)+labs(x="Median Total Income", y="Auto Theft", title="Correlation between Median Income and Auto Theft")
+Scatter1
+
+cor.test(neighbourhood_data$Median_tot, neighbourhood_data$Auto_Theft, method=c("kendall"))
+
+# Construct a Scatterplot of the relationship between Mean Years of Schooling and GNI per Capita with an added regression line
+linearreg1 <- lm(Median_tot ~ Auto_Theft, data = neighbourhood_data)
+summary(linearreg1)
+linearreggraph <- Scatter1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=2000)
+linearreggraph
 
 
 ```
