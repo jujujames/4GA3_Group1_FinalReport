@@ -1,0 +1,238 @@
+---
+title: "Group 1 project"
+author:
+  # Enter your name and student number here:
+- names: Annie Cheng/n William Russell
+  student_number: 
+subject: "ENVSOCTY 4GA3: Applied Spatial Statistics"
+
+# Do not edit below this line unless you know what you are doing
+# --------------------------------------------------------------
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    # The project-template-default.tex file was heavily  adapted from Steven V. Miller's template for academic manuscripts. See:
+    # http://svmiller.com/blog/2016/02/svm-r-markdown-manuscript/
+    # https://github.com/svmiller/svm-r-markdown-templates/blob/master/svm-latex-ms.tex
+    template: exercise-template-default.tex
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.align='center',
+                      out.width = "0.8\\linewidth")
+```
+
+```{r}
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(broom)
+library(ggpubr)
+library(scales)
+library(spdep)
+
+# Set the path to your shapefile
+shapefile_path <- "C:/Users/willd/OneDrive/Desktop/Data/CrimesbyCT.shp"
+
+# Read the shapefile
+ct_data <- st_read(shapefile_path)
+
+ct_data$Robbery_rate <- ifelse(ct_data$Population > 0 & ct_data$Income != 0, 
+                               (ct_data$Robbery / ct_data$Population) * 1000, NA)
+
+ct_data$Auto_Theft_rate <- ifelse(ct_data$Population > 0 & ct_data$Income != 0, 
+                                  (ct_data$Auto_Theft / ct_data$Population) * 1000, NA)
+
+ct_data$Break_and_rate <- ifelse(ct_data$Population > 0 & ct_data$Income != 0, 
+                                 (ct_data$Break_and / ct_data$Population) * 1000, NA)
+
+ct_data$Theft_Over_rate <- ifelse(ct_data$Population > 0 & ct_data$Income != 0, 
+                                  (ct_data$Theft_Over / ct_data$Population) * 1000, NA)
+
+ct_data$Income[ct_data$Income == 0] <- NA
+
+ct_data$Unemployme[ct_data$Unemployme == 0 & is.na(ct_data$Income)] <- NA
+
+ct_data <- st_transform(ct_data, 32617)
+```
+
+```{r}
+ggplot(ct_data) +
+  geom_sf(aes(fill = Income), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  coord_sf() +
+  labs(fill = "Median Income ($)")
+
+ggplot(ct_data) +
+  geom_sf(aes(fill = Unemployme), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  coord_sf() +
+  labs(fill = "Unemployment Rate (%)")
+
+ggplot(ct_data) +
+  geom_sf(aes(fill = Robbery_rate), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  coord_sf() +
+  labs(fill = "Robbery Rate (per 1000 people)")
+
+ggplot(ct_data) +
+  geom_sf(aes(fill = Auto_Theft_rate), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  coord_sf() +
+  labs(fill = "Auto Theft Rate (per 1000 people)")
+
+ggplot(ct_data) +
+  geom_sf(aes(fill = Break_and_rate), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  coord_sf() +
+  labs(fill = "Break and Enter Rate (per 1000 people)")
+
+ggplot(ct_data) +
+  geom_sf(aes(fill = Theft_Over_rate), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  coord_sf() +
+  labs(fill = "Theft Over $5000 Rate (per 1000 people)")
+
+```
+
+```{r}
+ct_data <- ct_data %>%
+  filter(complete.cases(Robbery_rate, Auto_Theft_rate, Break_and_rate, Theft_Over_rate))
+
+centroids <- st_centroid(ct_data)
+coords <- st_coordinates(centroids)
+
+neighbors <- dnearneigh(coords, 0, 2222)
+weights <- nb2listw(neighbors, style="W")
+
+moran_robbery <- moran.test(ct_data$Robbery_rate, weights)
+print(moran_robbery)
+
+moran_auto_theft <- moran.test(ct_data$Auto_Theft_rate, weights)
+print(moran_auto_theft)
+
+moran_break_enter <- moran.test(ct_data$Break_and_rate, weights)
+print(moran_break_enter)
+
+moran_theft_over <- moran.test(ct_data$Theft_Over_rate, weights)
+print(moran_theft_over)
+```
+
+```{r}
+moran.plot(ct_data$Robbery_rate, weights, 
+           xlab = "Standardized Robbery Rate", 
+           ylab = "Spatial Lag of Standardized Robbery Rate", 
+           main = "Moran's I Plot for Robbery Rate, per 1000 people")
+
+moran.plot(ct_data$Auto_Theft_rate, weights, 
+           xlab = "Standardized Auto Theft Rate", 
+           ylab = "Spatial Lag of Standardized Auto Theft Rate", 
+           main = "Moran's I Plot for Auto Theft Rate, per 1000 people")
+
+moran.plot(ct_data$Break_and_rate, weights, 
+           xlab = "Standardized Break and Enter Rate", 
+           ylab = "Spatial Lag of Standardized Break and Enter Rate", 
+           main = "Moran's I Plot for Break and Enter Rate, per 1000 people")
+
+moran.plot(ct_data$Theft_Over_rate, weights, 
+           xlab = "Standardized Theft Over $5000 Rate", 
+           ylab = "Spatial Lag of Standardized Theft Over $5000 Rate", 
+           main = "Moran's I Plot for Theft Over $5000 Rate, per 1000 people")
+```
+
+
+
+```{r}
+Robbery1 = ggplot(data=ct_data, aes(x=Income, y=Robbery_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Robbery Rate (per 1000 people)", title="Correlation between Median Income and Robbery Rate")
+
+Robberycor1 <- cor.test(ct_data$Robbery_rate, ct_data$Income, method=c("kendall"))
+print(Robberycor1)
+
+linearregRobbery1 <- lm(Robbery_rate ~ Income, data = ct_data)
+summary(linearregRobbery1)
+linearreggraphRobbery1 <- Robbery1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=190)
+linearreggraphRobbery1
+
+
+Robbery2 = ggplot(data=ct_data, aes(x=Unemployme, y=Robbery_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Robbery Rate (per 1000 people)", title="Correlation between Unemployment Rate and Robbery Rate")
+
+Robberycor2 <- cor.test(ct_data$Robbery_rate, ct_data$Unemployme, method=c("kendall"))
+print(Robberycor2)
+
+linearregRobbery2 <- lm(Robbery_rate ~ Unemployme, data = ct_data)
+summary(linearregRobbery2)
+linearreggraphRobbery2 <- Robbery2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=190)
+linearreggraphRobbery2
+```
+
+```{r}
+Auto1 = ggplot(data=ct_data, aes(x=Income, y=Auto_Theft_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Auto Theft Rate (per 1000 people)", title="Correlation between Median Income and Auto Theft Rate")
+
+Autocor1 <- cor.test(ct_data$Auto_Theft_rate, ct_data$Income, method=c("kendall"))
+print(Autocor1)
+
+linearregAuto1 <- lm(Auto_Theft_rate ~ Income, data = ct_data)
+summary(linearregAuto1)
+linearreggraphAuto1 <- Auto1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=300)
+linearreggraphAuto1
+
+
+Auto2 = ggplot(data=ct_data, aes(x=Unemployme, y=Auto_Theft_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Auto Theft Rate (per 1000 people)", title="Correlation between Unemployment Rate and Auto Theft Rate")
+
+Autocor2 <- cor.test(ct_data$Auto_Theft_rate, ct_data$Unemployme, method=c("kendall"))
+print(Autocor2)
+
+linearregAuto2 <- lm(Auto_Theft_rate ~ Unemployme, data = ct_data)
+summary(linearregAuto2)
+linearreggraphAuto2 <- Auto2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=300)
+linearreggraphAuto2
+```
+
+```{r}
+Break1 = ggplot(data=ct_data, aes(x=Income, y=Break_and_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Break and Enter Rate (per 1000 people)", title="Correlation between Median Income and Break and Enter Rate")
+
+Breakcor1 <- cor.test(ct_data$Break_and_rate, ct_data$Income, method=c("kendall"))
+print(Breakcor1)
+
+linearregBreak1 <- lm(Break_and_rate ~ Income, data = ct_data)
+summary(linearregBreak1)
+linearreggraphBreak1 <- Break1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=250)
+linearreggraphBreak1
+
+
+Break2 = ggplot(data=ct_data, aes(x=Unemployme, y=Break_and_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Break and Enter Rate (per 1000 people)", title="Correlation between Unemployment Rate and Break and Enter Rate")
+
+Breakcor2 <- cor.test(ct_data$Break_and_rate, ct_data$Unemployme, method=c("kendall"))
+print(Breakcor2)
+
+linearregBreak2 <- lm(Break_and_rate ~ Unemployme, data = ct_data)
+summary(linearregBreak2)
+linearreggraphBreak2 <- Break2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=250)
+linearreggraphBreak2
+```
+
+```{r}
+TheftOver1 = ggplot(data=ct_data, aes(x=Income, y=Theft_Over_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Theft Over $5000 Rate (per 1000 people)", title="Correlation between Median Income and Theft Over $5000 Rate")
+
+TheftOvercor1 <- cor.test(ct_data$Theft_Over_rate, ct_data$Income, method=c("kendall"))
+print(TheftOvercor1)
+
+linearregTheftOver1 <- lm(Theft_Over_rate ~ Income, data = ct_data)
+summary(linearregTheftOver1)
+linearreggraphTheftOver1 <- TheftOver1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=150)
+linearreggraphTheftOver1
+
+
+TheftOver2 = ggplot(data=ct_data, aes(x=Unemployme, y=Theft_Over_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Theft Over $5000 Rate (per 1000 people)", title="Correlation between Unemployment Rate and Theft Over $5000 Rate")
+
+TheftOvercor2 <- cor.test(ct_data$Theft_Over_rate, ct_data$Unemployme, method=c("kendall"))
+print(TheftOvercor2)
+
+linearregTheftOver2 <- lm(Theft_Over_rate ~ Unemployme, data = ct_data)
+summary(linearregTheftOver2)
+linearreggraphTheftOver2 <- TheftOver2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=150)
+linearreggraphTheftOver2
+```
+
