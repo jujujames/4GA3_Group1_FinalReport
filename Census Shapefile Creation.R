@@ -11,11 +11,11 @@ regions = list_census_regions('CA16')
 
 
 # Vectors:
-  # Total Household Income ($)
+  # Median Total Household Income ($)
   # Unemployment Rate
   # Total Population
 
-vectors = c('v_CA16_4985', 'v_CA16_5618', 'v_CA16_401')
+vectors = c('v_CA16_2397', 'v_CA16_5618', 'v_CA16_401')
 
 census_16 = get_census(dataset='CA16', regions=list(CSD='3520005'),
                        vectors = vectors, level='CT', geo_format = 'sf')
