@@ -32,12 +32,20 @@ library(broom)
 library(ggpubr)
 library(scales)
 library(spdep)
+library(readr)
+library(MASS)
 
-# Set the path to your shapefile
 shapefile_path <- "C:/Users/willd/OneDrive/Desktop/Data/CrimesbyCT.shp"
 
-# Read the shapefile
 ct_data <- st_read(shapefile_path)
+
+ct_data <- st_transform(ct_data, 32617)
+
+ggplot(ct_data) +
+  geom_sf(fill = "gray", color = "black", size = 0.1) +
+  coord_sf() +
+  labs(fill = NULL) +
+  theme_minimal()
 
 ct_data$Robbery_rate <- ifelse(ct_data$Population > 0 & ct_data$Income != 0, 
                                (ct_data$Robbery / ct_data$Population) * 1000, NA)
@@ -54,8 +62,6 @@ ct_data$Theft_Over_rate <- ifelse(ct_data$Population > 0 & ct_data$Income != 0,
 ct_data$Income[ct_data$Income == 0] <- NA
 
 ct_data$Unemployme[ct_data$Unemployme == 0 & is.na(ct_data$Income)] <- NA
-
-ct_data <- st_transform(ct_data, 32617)
 ```
 
 ```{r}
@@ -63,37 +69,43 @@ ggplot(ct_data) +
   geom_sf(aes(fill = Income), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
-  labs(fill = "Median Income ($)")
+  labs(fill = "Median Income ($)") +
+  theme_minimal()
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Unemployme), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
-  labs(fill = "Unemployment Rate (%)")
+  labs(fill = "Unemployment Rate (%)") +
+  theme_minimal()
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Robbery_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
-  labs(fill = "Robbery Rate (per 1000 people)")
+  labs(fill = "Robbery Rate (per 1000 people)") +
+  theme_minimal()
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Auto_Theft_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
-  labs(fill = "Auto Theft Rate (per 1000 people)")
+  labs(fill = "Auto Theft Rate (per 1000 people)") +
+  theme_minimal()
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Break_and_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
-  labs(fill = "Break and Enter Rate (per 1000 people)")
+  labs(fill = "Break and Enter Rate (per 1000 people)") +
+  theme_minimal()
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Theft_Over_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
-  labs(fill = "Theft Over $5000 Rate (per 1000 people)")
+  labs(fill = "Theft Over $5000 Rate (per 1000 people)") +
+  theme_minimal()
 
 ```
 
@@ -236,3 +248,99 @@ linearreggraphTheftOver2 <- TheftOver2 + geom_smooth(method="lm", col="red") + s
 linearreggraphTheftOver2
 ```
 
+```{r}
+Robbery_model <- glm(Robbery_rate ~ poly(Income, 2) + Unemployme + Income:Unemployme, 
+                     family = gaussian(), data = ct_data)
+
+summary(Robbery_model)
+
+Auto_Theft_model <- glm(Auto_Theft_rate ~ Income + I(Income^2) + Unemployme + Income:Unemployme, 
+                        family = gaussian(), data = ct_data)
+
+summary(Auto_Theft_model)
+
+Break_and_Enter_model <- glm(Break_and_rate ~ Income + Unemployme + Income:Unemployme, 
+                         family = gaussian(), data = ct_data)
+
+summary(Break_and_Enter_model)
+
+Theft_Over_5000_model <- glm(Theft_Over_rate ~ Income + Unemployme, 
+                             family = gaussian(), data = ct_data)
+
+summary(Theft_Over_5000_model)
+
+
+
+
+# Load necessary libraries
+library(tidyverse)
+
+# List of models with corresponding names
+models <- list(Robbery = Robbery_model, Auto_Theft = Auto_Theft_model, 
+               Break_and_Enter = Break_and_Enter_model, Theft_Over_5000 = Theft_Over_5000_model)
+
+# Function to safely extract model coefficients and convert to a tidy format
+extract_model_coefficients <- function(model, crime_name) {
+  coefs <- summary(model)$coefficients
+  tibble(
+    Predictor = rownames(coefs),
+    Coefficient = coefs[, "Estimate"],
+    Std.Error = coefs[, "Std. Error"],
+    t.value = coefs[, "t value"],
+    Pr = coefs[, "Pr(>|t|)"],
+    Crime = crime_name
+  )
+}
+
+# Apply function to each model and bind rows together
+coef_data <- bind_rows(lapply(names(models), function(name) {
+  extract_model_coefficients(models[[name]], name)
+}), .id = "ModelID")
+
+# Check the resulting data frame
+print(coef_data)
+
+# Plotting the coefficients
+ggplot(coef_data, aes(x = Predictor, y = Coefficient, fill = Crime)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "Comparative Effects of Predictors Across Crime Types", 
+       y = "Coefficient Value", x = "Predictor Variables") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Improve readability of x-axis labels
+
+
+```
+
+```{r}
+ct_data$predicted_robbery <- predict(Robbery_model, newdata = ct_data, type = "response")
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_robbery), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  labs(fill = "Predicted Robbery Rate") +
+  theme_minimal()
+
+ct_data$predicted_auto_theft <- predict(Auto_Theft_model, newdata = ct_data, type = "response")
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_auto_theft), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  labs(fill = "Predicted Auto Theft Rate") +
+  theme_minimal()
+
+ct_data$predicted_break_enter <- predict(Break_and_Enter_model, newdata = ct_data, type = "response")
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_break_enter), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  labs(fill = "Predicted Break and Enter Rate") +
+  theme_minimal()
+
+ct_data$predicted_theft_over <- predict(Theft_Over_5000_model, newdata = ct_data, type = "response")
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_theft_over), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
+  labs(fill = "Predicted Theft Over $5000 Rate") +
+  theme_minimal()
+```
