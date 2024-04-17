@@ -34,6 +34,8 @@ library(scales)
 library(spdep)
 library(readr)
 library(MASS)
+library(tidyverse)
+library(spatialreg)
 
 shapefile_path <- "C:/Users/willd/OneDrive/Desktop/Data/CrimesbyCT.shp"
 
@@ -249,48 +251,45 @@ linearreggraphTheftOver2
 ```
 
 ```{r}
-Robbery_model <- glm(Robbery_rate ~ poly(Income, 2) + Unemployme + Income:Unemployme, 
-                     family = gaussian(), data = ct_data)
+ct_data$Income_scaled <- scale(ct_data$Income)
+ct_data$Unemployme_scaled <- scale(ct_data$Unemployme)
 
+Robbery_model <- glm.nb(Robbery_rate ~ Income_scaled + Unemployme_scaled, data = ct_data)
 summary(Robbery_model)
 
-Auto_Theft_model <- glm(Auto_Theft_rate ~ Income + I(Income^2) + Unemployme + Income:Unemployme, 
-                        family = gaussian(), data = ct_data)
-
+Auto_Theft_model <- glm.nb(Auto_Theft_rate ~ Income_scaled, data = ct_data)
 summary(Auto_Theft_model)
 
-Break_and_Enter_model <- glm(Break_and_rate ~ Income + Unemployme + Income:Unemployme, 
-                         family = gaussian(), data = ct_data)
-
+Break_and_Enter_model <- glm.nb(Break_and_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data)
 summary(Break_and_Enter_model)
 
-Theft_Over_5000_model <- glm(Theft_Over_rate ~ Income + Unemployme, 
-                             family = gaussian(), data = ct_data)
-
+Theft_Over_5000_model <- glm.nb(Theft_Over_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data)
 summary(Theft_Over_5000_model)
 
 
 
 
-# Load necessary libraries
-library(tidyverse)
 
 # List of models with corresponding names
 models <- list(Robbery = Robbery_model, Auto_Theft = Auto_Theft_model, 
                Break_and_Enter = Break_and_Enter_model, Theft_Over_5000 = Theft_Over_5000_model)
 
-# Function to safely extract model coefficients and convert to a tidy format
 extract_model_coefficients <- function(model, crime_name) {
   coefs <- summary(model)$coefficients
   tibble(
     Predictor = rownames(coefs),
     Coefficient = coefs[, "Estimate"],
     Std.Error = coefs[, "Std. Error"],
-    t.value = coefs[, "t value"],
-    Pr = coefs[, "Pr(>|t|)"],
+    z.value = coefs[, "z value"],  # Adjusted from t.value to z.value
+    Pr = coefs[, "Pr(>|z|)"],      # Adjusted from Pr(>|t|) to Pr(>|z|)
     Crime = crime_name
   )
 }
+
+# Assuming the model variables Robbery_model, Auto_Theft_model, Break_and_Enter_model, Theft_Over_5000_model
+# are defined and are the outputs from glm.nb()
+models <- list(Robbery = Robbery_model, Auto_Theft = Auto_Theft_model, 
+               Break_and_Enter = Break_and_Enter_model, Theft_Over_5000 = Theft_Over_5000_model)
 
 # Apply function to each model and bind rows together
 coef_data <- bind_rows(lapply(names(models), function(name) {
@@ -300,13 +299,15 @@ coef_data <- bind_rows(lapply(names(models), function(name) {
 # Check the resulting data frame
 print(coef_data)
 
-# Plotting the coefficients
+# Plotting the coefficients using ggplot2
+library(ggplot2)
 ggplot(coef_data, aes(x = Predictor, y = Coefficient, fill = Crime)) +
   geom_bar(stat = "identity", position = position_dodge()) +
   labs(title = "Comparative Effects of Predictors Across Crime Types", 
        y = "Coefficient Value", x = "Predictor Variables") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Improve readability of x-axis labels
+
 
 
 ```
@@ -342,5 +343,184 @@ ggplot(data = ct_data) +
   geom_sf(aes(fill = predicted_theft_over), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   labs(fill = "Predicted Theft Over $5000 Rate") +
+  theme_minimal()
+```
+
+```{r}
+
+
+
+
+
+# Robbery
+
+# Define the exponential decay function
+distance_decay_function <- function(d, bandwidth) {
+  exp(-d / bandwidth)  # Ensure this operation is correctly vectorized
+}
+
+# Define a distance threshold and a bandwidth
+robbery_threshold <- 3100  # Use the same threshold as before for consistency
+robbery_bandwidth <- 1500  # Bandwidth for the decay function
+
+# Create neighborhood structure
+robbery_neighbors <- dnearneigh(coords, 0, robbery_threshold)
+robbery_distances <- nbdists(robbery_neighbors, coords)
+
+# Apply the decay function to each list of distances
+robbery_decay_weights <- lapply(robbery_distances, function(d) distance_decay_function(d, robbery_bandwidth))
+
+# Convert decayed distances to spatial weights
+robbery_listw <- nb2listw(robbery_neighbors, glist=robbery_decay_weights, style="W")
+
+# Example model fit using the spatial weights
+robbery_lag_model <- lagsarlm(Robbery_rate ~ Income_scaled + Unemployme_scaled, data=ct_data, listw=robbery_listw)
+print(summary(robbery_lag_model))
+
+
+
+
+
+# Auto Theft
+
+# Define a distance threshold and a bandwidth
+auto_threshold <- 2222  # Use the same threshold as before for consistency
+auto_bandwidth <- 1500  # Bandwidth for the decay function
+
+# Create neighborhood structure
+auto_neighbors <- dnearneigh(coords, 0, auto_threshold)
+auto_distances <- nbdists(auto_neighbors, coords)
+
+# Apply the decay function to each list of distances
+auto_decay_weights <- lapply(auto_distances, function(d) distance_decay_function(d, auto_bandwidth))
+
+# Convert decayed distances to spatial weights
+auto_listw <- nb2listw(auto_neighbors, glist=auto_decay_weights, style="W")
+
+# Example model fit using the spatial weights
+auto_lag_model <- lagsarlm(Auto_Theft_rate ~ Income_scaled + Unemployme_scaled, data=ct_data, listw=auto_listw)
+print(summary(auto_lag_model))
+
+
+
+
+
+# Break and Enter
+
+# Define a distance threshold and a bandwidth
+break_threshold <- 3800  # Use the same threshold as before for consistency
+break_bandwidth <- 2000  # Bandwidth for the decay function
+
+# Create neighborhood structure
+break_neighbors <- dnearneigh(coords, 0, break_threshold)
+break_distances <- nbdists(break_neighbors, coords)
+
+# Apply the decay function to each list of distances
+break_decay_weights <- lapply(break_distances, function(d) distance_decay_function(d, break_bandwidth))
+
+# Convert decayed distances to spatial weights
+break_listw <- nb2listw(break_neighbors, glist=break_decay_weights, style="W")
+
+# Example model fit using the spatial weights
+break_lag_model <- lagsarlm(Break_and_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data, listw=break_listw)
+print(summary(break_lag_model))
+
+
+
+
+
+# Theft over $5000
+
+# Define a distance threshold and a bandwidth
+theft_over_threshold <- 2222  # Use the same threshold as before for consistency
+theft_over_bandwidth <- 1500  # Bandwidth for the decay function
+
+# Create neighborhood structure
+theft_over_neighbors <- dnearneigh(coords, 0, theft_over_threshold)
+theft_over_distances <- nbdists(theft_over_neighbors, coords)
+
+# Apply the decay function to each list of distances
+theft_over_decay_weights <- lapply(theft_over_distances, function(d) distance_decay_function(d, theft_over_bandwidth))
+
+# Convert decayed distances to spatial weights
+theft_over_listw <- nb2listw(theft_over_neighbors, glist=theft_over_decay_weights, style="W")
+
+# Example model fit using the spatial weights
+theft_over_lag_model <- lagsarlm(Theft_Over_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data, listw=theft_over_listw)
+print(summary(theft_over_lag_model))
+
+```
+
+```{r}
+# List of models with corresponding names
+lag_models <- list(Robbery = robbery_lag_model, Auto_Theft = auto_lag_model, 
+               Break_and_Enter = break_lag_model, Theft_Over_5000 = theft_over_lag_model)
+
+lag_extract_model_coefficients <- function(lag_model, crime_name) {
+  # Extracting coefficients and their names
+  lag_coefs <- summary(lag_model)$coefficients
+  std_errors = summary(lag_model)$rest.se
+  
+  # Building the data frame
+  tibble(
+    Predictor = names(lag_coefs),
+    Coefficient = lag_coefs,
+    Std.Error = std_errors,
+    # Optionally calculate z-value if needed:
+    # z.value = lag_coefs / std_errors,
+    Crime = crime_name
+  )
+}
+
+# Apply the modified function to each model and bind rows together
+lag_coef_data <- bind_rows(lapply(names(lag_models), function(name) {
+  lag_extract_model_coefficients(lag_models[[name]], name)
+}), .id = "ModelID")
+
+# Print the resulting data frame to see the outcome
+print(lag_coef_data)
+
+
+ggplot(lag_coef_data, aes(x = Predictor, y = Coefficient, fill = Crime)) +
+  geom_bar(stat = "identity", position = position_dodge()) +  # Use position_dodge to separate bars per group
+  labs(title = "Comparative Effects of Predictors Across Crime Types",
+       y = "Coefficient Value", 
+       x = "Predictor Variables") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Adjust text alignment for readability
+
+```
+
+```{r}
+ct_data$predicted_robbery_lag <- as.numeric(predict(robbery_lag_model, newdata = ct_data, type = "response", listw = robbery_listw))
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_robbery_lag), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
+  labs(fill = "Predicted Robbery Rate (Lag Model)") +
+  theme_minimal()
+
+ct_data$predicted_auto_theft_lag <- as.numeric(predict(auto_lag_model, newdata = ct_data, type = "response", listw = auto_listw))
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_auto_theft_lag), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
+  labs(fill = "Predicted Auto Theft Rate (Lag Model)") +
+  theme_minimal()
+
+ct_data$predicted_break_enter_lag <- as.numeric(predict(break_lag_model, newdata = ct_data, type = "response", listw = break_listw))
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_break_enter_lag), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
+  labs(fill = "Predicted Break and Enter Rate (Lag Model)") +
+  theme_minimal()
+
+ct_data$predicted_theft_over_lag <- as.numeric(predict(theft_over_lag_model, newdata = ct_data, type = "response", listw = theft_over_listw))
+
+ggplot(data = ct_data) +
+  geom_sf(aes(fill = predicted_theft_over_lag), color = "black", size = 0.1) +
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
+  labs(fill = "Predicted Theft Over $5000 Rate (Lag Model)") +
   theme_minimal()
 ```
