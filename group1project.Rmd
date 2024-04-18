@@ -1,9 +1,23 @@
 ---
-title: "Group 1 project"
+title: "The Effects of Income and Unemployment on Crime in Toronto"
 author:
   # Enter your name and student number here:
-- names: Annie Cheng/n William Russell
-  student_number: 
+- name: Annie Cheng
+  student_number: 400298037
+- name: Kenzie Dorgelo
+  student_number: 400374596
+- name: Sam Fanaki
+  student_number: 400297172
+- name: Iris Huang
+  student_number: 400295138
+- name: Jefferson Lam
+  student_number: 400272316
+- name: Yiyao Li
+  student_number: 400258214
+- name: William Russell
+  student_number: 400199227
+- name: Julian Vella
+  student_number: 400408707
 subject: "ENVSOCTY 4GA3: Applied Spatial Statistics"
 
 # Do not edit below this line unless you know what you are doing
@@ -27,13 +41,9 @@ knitr::opts_chunk$set(echo = TRUE,
 ```{r}
 library(sf)
 library(ggplot2)
-library(dplyr)
-library(broom)
 library(ggpubr)
 library(scales)
 library(spdep)
-library(readr)
-library(MASS)
 library(tidyverse)
 library(spatialreg)
 
@@ -47,7 +57,15 @@ ggplot(ct_data) +
   geom_sf(fill = "gray", color = "black", size = 0.1) +
   coord_sf() +
   labs(fill = NULL) +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  # Removes major grid lines
+  panel.grid.minor = element_blank()   # Removes minor grid lines
+)
 
 ct_data$Robbery_rate <- ifelse(ct_data$Population > 0 & ct_data$Income != 0, 
                                (ct_data$Robbery / ct_data$Population) * 1000, NA)
@@ -72,42 +90,96 @@ ggplot(ct_data) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
   labs(fill = "Median Income ($)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Unemployme), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
   labs(fill = "Unemployment Rate (%)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Robbery_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
   labs(fill = "Robbery Rate (per 1000 people)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Auto_Theft_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
   labs(fill = "Auto Theft Rate (per 1000 people)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Break_and_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
   labs(fill = "Break and Enter Rate (per 1000 people)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ggplot(ct_data) +
   geom_sf(aes(fill = Theft_Over_rate), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
   coord_sf() +
   labs(fill = "Theft Over $5000 Rate (per 1000 people)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ```
 
@@ -159,15 +231,24 @@ moran.plot(ct_data$Theft_Over_rate, weights,
 
 
 ```{r}
-Robbery1 = ggplot(data=ct_data, aes(x=Income, y=Robbery_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Robbery Rate (per 1000 people)", title="Correlation between Median Income and Robbery Rate")
+# Transform 'Income' using natural logarithm
+ct_data$Log_Unemployme <- log(ct_data$Unemployme + 1)  # Adding 1 to avoid log(0) which is undefined
+
+
+# Transform 'Income' using natural logarithm
+ct_data$Log_Income <- log(ct_data$Income + 1)  # Adding 1 to avoid log(0) which is undefined
+
+
+
+Robbery1 = ggplot(data=ct_data, aes(x=Log_Income, y=Robbery_rate))+geom_point(size=1)+labs(x="Log of Median Income ($)", y="Robbery Rate (per 1000 people)", title="Correlation between Log-Transformed Median Income and Robbery Rate")
 
 Robberycor1 <- cor.test(ct_data$Robbery_rate, ct_data$Income, method=c("kendall"))
 print(Robberycor1)
 
-linearregRobbery1 <- lm(Robbery_rate ~ Income, data = ct_data)
-summary(linearregRobbery1)
-linearreggraphRobbery1 <- Robbery1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=190)
-linearreggraphRobbery1
+logregRobbery1 <- lm(Robbery_rate ~ Log_Income, data = ct_data)
+summary(logregRobbery1)
+logreggraphRobbery1 <- Robbery1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=10.5, label.y=190)
+logreggraphRobbery1
 
 
 Robbery2 = ggplot(data=ct_data, aes(x=Unemployme, y=Robbery_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Robbery Rate (per 1000 people)", title="Correlation between Unemployment Rate and Robbery Rate")
@@ -175,10 +256,11 @@ Robbery2 = ggplot(data=ct_data, aes(x=Unemployme, y=Robbery_rate))+geom_point(si
 Robberycor2 <- cor.test(ct_data$Robbery_rate, ct_data$Unemployme, method=c("kendall"))
 print(Robberycor2)
 
-linearregRobbery2 <- lm(Robbery_rate ~ Unemployme, data = ct_data)
-summary(linearregRobbery2)
-linearreggraphRobbery2 <- Robbery2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=190)
-linearreggraphRobbery2
+quadregRobbery2 <- lm(Robbery_rate ~ poly(Unemployme, 2), data = ct_data)
+summary(quadregRobbery2)
+quadreggraphRobbery2 <- Robbery2 + geom_smooth(method = "lm", formula = y ~ poly(x, 2), col = "red") + 
+  stat_regline_equation(label.x=0, label.y=190)
+quadreggraphRobbery2
 ```
 
 ```{r}
@@ -244,111 +326,19 @@ TheftOver2 = ggplot(data=ct_data, aes(x=Unemployme, y=Theft_Over_rate))+geom_poi
 TheftOvercor2 <- cor.test(ct_data$Theft_Over_rate, ct_data$Unemployme, method=c("kendall"))
 print(TheftOvercor2)
 
-linearregTheftOver2 <- lm(Theft_Over_rate ~ Unemployme, data = ct_data)
-summary(linearregTheftOver2)
-linearreggraphTheftOver2 <- TheftOver2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=150)
-linearreggraphTheftOver2
+cubregTheftOver2 <- lm(Theft_Over_rate ~ poly(Unemployme, 3), data = ct_data)
+summary(cubregTheftOver2)
+cubreggraphTheftOver2 <- TheftOver2 + geom_smooth(method = "lm", formula = y ~ poly(x, 3), col = "red") +
+  stat_regline_equation(label.x=0, label.y=150)
+cubreggraphTheftOver2
 ```
 
 ```{r}
+
 ct_data$Income_scaled <- scale(ct_data$Income)
 ct_data$Unemployme_scaled <- scale(ct_data$Unemployme)
-
-Robbery_model <- glm.nb(Robbery_rate ~ Income_scaled + Unemployme_scaled, data = ct_data)
-summary(Robbery_model)
-
-Auto_Theft_model <- glm.nb(Auto_Theft_rate ~ Income_scaled, data = ct_data)
-summary(Auto_Theft_model)
-
-Break_and_Enter_model <- glm.nb(Break_and_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data)
-summary(Break_and_Enter_model)
-
-Theft_Over_5000_model <- glm.nb(Theft_Over_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data)
-summary(Theft_Over_5000_model)
-
-
-
-
-
-# List of models with corresponding names
-models <- list(Robbery = Robbery_model, Auto_Theft = Auto_Theft_model, 
-               Break_and_Enter = Break_and_Enter_model, Theft_Over_5000 = Theft_Over_5000_model)
-
-extract_model_coefficients <- function(model, crime_name) {
-  coefs <- summary(model)$coefficients
-  tibble(
-    Predictor = rownames(coefs),
-    Coefficient = coefs[, "Estimate"],
-    Std.Error = coefs[, "Std. Error"],
-    z.value = coefs[, "z value"],  # Adjusted from t.value to z.value
-    Pr = coefs[, "Pr(>|z|)"],      # Adjusted from Pr(>|t|) to Pr(>|z|)
-    Crime = crime_name
-  )
-}
-
-# Assuming the model variables Robbery_model, Auto_Theft_model, Break_and_Enter_model, Theft_Over_5000_model
-# are defined and are the outputs from glm.nb()
-models <- list(Robbery = Robbery_model, Auto_Theft = Auto_Theft_model, 
-               Break_and_Enter = Break_and_Enter_model, Theft_Over_5000 = Theft_Over_5000_model)
-
-# Apply function to each model and bind rows together
-coef_data <- bind_rows(lapply(names(models), function(name) {
-  extract_model_coefficients(models[[name]], name)
-}), .id = "ModelID")
-
-# Check the resulting data frame
-print(coef_data)
-
-# Plotting the coefficients using ggplot2
-library(ggplot2)
-ggplot(coef_data, aes(x = Predictor, y = Coefficient, fill = Crime)) +
-  geom_bar(stat = "identity", position = position_dodge()) +
-  labs(title = "Comparative Effects of Predictors Across Crime Types", 
-       y = "Coefficient Value", x = "Predictor Variables") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Improve readability of x-axis labels
-
-
-
-```
-
-```{r}
-ct_data$predicted_robbery <- predict(Robbery_model, newdata = ct_data, type = "response")
-
-ggplot(data = ct_data) +
-  geom_sf(aes(fill = predicted_robbery), color = "black", size = 0.1) +
-  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
-  labs(fill = "Predicted Robbery Rate") +
-  theme_minimal()
-
-ct_data$predicted_auto_theft <- predict(Auto_Theft_model, newdata = ct_data, type = "response")
-
-ggplot(data = ct_data) +
-  geom_sf(aes(fill = predicted_auto_theft), color = "black", size = 0.1) +
-  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
-  labs(fill = "Predicted Auto Theft Rate") +
-  theme_minimal()
-
-ct_data$predicted_break_enter <- predict(Break_and_Enter_model, newdata = ct_data, type = "response")
-
-ggplot(data = ct_data) +
-  geom_sf(aes(fill = predicted_break_enter), color = "black", size = 0.1) +
-  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
-  labs(fill = "Predicted Break and Enter Rate") +
-  theme_minimal()
-
-ct_data$predicted_theft_over <- predict(Theft_Over_5000_model, newdata = ct_data, type = "response")
-
-ggplot(data = ct_data) +
-  geom_sf(aes(fill = predicted_theft_over), color = "black", size = 0.1) +
-  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = comma) +
-  labs(fill = "Predicted Theft Over $5000 Rate") +
-  theme_minimal()
-```
-
-```{r}
-
-
+ct_data$Log_Income_scaled <- scale(ct_data$Log_Income)
+ct_data$Log_Unemployme_scaled <- scale(ct_data$Log_Unemployme)
 
 
 
@@ -374,9 +364,8 @@ robbery_decay_weights <- lapply(robbery_distances, function(d) distance_decay_fu
 robbery_listw <- nb2listw(robbery_neighbors, glist=robbery_decay_weights, style="W")
 
 # Example model fit using the spatial weights
-robbery_lag_model <- lagsarlm(Robbery_rate ~ Income_scaled + Unemployme_scaled, data=ct_data, listw=robbery_listw)
+robbery_lag_model <- lagsarlm(Robbery_rate ~ Log_Income_scaled + I(Unemployme_scaled^2), data=ct_data, listw=robbery_listw)
 print(summary(robbery_lag_model))
-
 
 
 
@@ -398,7 +387,7 @@ auto_decay_weights <- lapply(auto_distances, function(d) distance_decay_function
 auto_listw <- nb2listw(auto_neighbors, glist=auto_decay_weights, style="W")
 
 # Example model fit using the spatial weights
-auto_lag_model <- lagsarlm(Auto_Theft_rate ~ Income_scaled + Unemployme_scaled, data=ct_data, listw=auto_listw)
+auto_lag_model <- lagsarlm(Auto_Theft_rate ~ Income_scaled, data=ct_data, listw=auto_listw)
 print(summary(auto_lag_model))
 
 
@@ -422,7 +411,7 @@ break_decay_weights <- lapply(break_distances, function(d) distance_decay_functi
 break_listw <- nb2listw(break_neighbors, glist=break_decay_weights, style="W")
 
 # Example model fit using the spatial weights
-break_lag_model <- lagsarlm(Break_and_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data, listw=break_listw)
+break_lag_model <- lagsarlm(Break_and_rate ~ Income_scaled + Unemployme_scaled, data = ct_data, listw=break_listw)
 print(summary(break_lag_model))
 
 
@@ -446,48 +435,8 @@ theft_over_decay_weights <- lapply(theft_over_distances, function(d) distance_de
 theft_over_listw <- nb2listw(theft_over_neighbors, glist=theft_over_decay_weights, style="W")
 
 # Example model fit using the spatial weights
-theft_over_lag_model <- lagsarlm(Theft_Over_rate ~ Income_scaled + I(Unemployme_scaled^2), data = ct_data, listw=theft_over_listw)
+theft_over_lag_model <- lagsarlm(Theft_Over_rate ~ Income_scaled + I(Unemployme_scaled^3), data = ct_data, listw=theft_over_listw)
 print(summary(theft_over_lag_model))
-
-```
-
-```{r}
-# List of models with corresponding names
-lag_models <- list(Robbery = robbery_lag_model, Auto_Theft = auto_lag_model, 
-               Break_and_Enter = break_lag_model, Theft_Over_5000 = theft_over_lag_model)
-
-lag_extract_model_coefficients <- function(lag_model, crime_name) {
-  # Extracting coefficients and their names
-  lag_coefs <- summary(lag_model)$coefficients
-  std_errors = summary(lag_model)$rest.se
-  
-  # Building the data frame
-  tibble(
-    Predictor = names(lag_coefs),
-    Coefficient = lag_coefs,
-    Std.Error = std_errors,
-    # Optionally calculate z-value if needed:
-    # z.value = lag_coefs / std_errors,
-    Crime = crime_name
-  )
-}
-
-# Apply the modified function to each model and bind rows together
-lag_coef_data <- bind_rows(lapply(names(lag_models), function(name) {
-  lag_extract_model_coefficients(lag_models[[name]], name)
-}), .id = "ModelID")
-
-# Print the resulting data frame to see the outcome
-print(lag_coef_data)
-
-
-ggplot(lag_coef_data, aes(x = Predictor, y = Coefficient, fill = Crime)) +
-  geom_bar(stat = "identity", position = position_dodge()) +  # Use position_dodge to separate bars per group
-  labs(title = "Comparative Effects of Predictors Across Crime Types",
-       y = "Coefficient Value", 
-       x = "Predictor Variables") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Adjust text alignment for readability
 
 ```
 
@@ -497,30 +446,66 @@ ct_data$predicted_robbery_lag <- as.numeric(predict(robbery_lag_model, newdata =
 ggplot(data = ct_data) +
   geom_sf(aes(fill = predicted_robbery_lag), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
-  labs(fill = "Predicted Robbery Rate (Lag Model)") +
-  theme_minimal()
+  labs(fill = "Predicted Robbery Rate (per 1000 people)") +
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ct_data$predicted_auto_theft_lag <- as.numeric(predict(auto_lag_model, newdata = ct_data, type = "response", listw = auto_listw))
 
 ggplot(data = ct_data) +
   geom_sf(aes(fill = predicted_auto_theft_lag), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
-  labs(fill = "Predicted Auto Theft Rate (Lag Model)") +
-  theme_minimal()
+  labs(fill = "Predicted Auto Theft Rate (per 1000 people)") +
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ct_data$predicted_break_enter_lag <- as.numeric(predict(break_lag_model, newdata = ct_data, type = "response", listw = break_listw))
 
 ggplot(data = ct_data) +
   geom_sf(aes(fill = predicted_break_enter_lag), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
-  labs(fill = "Predicted Break and Enter Rate (Lag Model)") +
-  theme_minimal()
+  labs(fill = "Predicted Break and Enter Rate (per 1000 people)") +
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 
 ct_data$predicted_theft_over_lag <- as.numeric(predict(theft_over_lag_model, newdata = ct_data, type = "response", listw = theft_over_listw))
 
 ggplot(data = ct_data) +
   geom_sf(aes(fill = predicted_theft_over_lag), color = "black", size = 0.1) +
-  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma) +
-  labs(fill = "Predicted Theft Over $5000 Rate (Lag Model)") +
-  theme_minimal()
+  scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma, limits = c(0, max(ct_data$predicted_theft_over_lag, na.rm = TRUE))) +
+  labs(fill = "Predicted Theft Over $5000 Rate (per 1000 people)") +
+  theme_minimal() +
+  theme(
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.grid.major = element_blank(),  
+  panel.grid.minor = element_blank(),
+  legend.title = element_text(size = 8)
+)
 ```
