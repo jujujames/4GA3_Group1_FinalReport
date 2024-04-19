@@ -78,7 +78,7 @@ From 2021 to 2023, auto theft in Toronto has seen a notable rise, with a nearly 
 
 In terms of bike thefts, there was a small spike in Toronto from 2022 to 2024, as according to the Toronto Police Service Public Safety data, bike thefts total rose from 323 to 424. About 40% of these took place in residential areas (Toronto Police Services, 2024). The rise of bike thefts over the years is caused by a similar reason to auto thefts, as for thieves and criminals they are a way to mitigate their own economic challenges and status. Bicycle thieves see the reward as being far greater than the risk of stealing vehicles, as stealing bikes is easier and the chances of getting caught are rare (SoCalcycling, 2022). The Toronto Police Service suggests that the use of a proper bicycle rack and bike lock are the best measures to discourage or slow down bike thieves (Toronto Police Service, 2024). But less privileged neighborhoods across Toronto aren’t as fortunate, as proper bicycle racks aren’t as widely available compared to places like the downtown core.
 
-For the purposes of this study, four types of crime were taken into consideration. These crimes are robbery, auto theft, break and enter, and theft over $5000, standardized as rates per 1000 people.
+For the purposes of this study, four types of crime were taken into consideration. These crimes are robbery, auto theft, break and enter, and theft over $5000, standardized as rates per 1000 people. The two most recent years a Canadian census was collected were 2021 and 2016. Given that COVID-19 was still heavily affecting global behaviour due to lockdowns and remote work in the year 2021, 2016 was chosen for analysis. This should reflect relatively recent typical trends of the economy as well as criminal activity while being unhindered by drastic global crises. 
 
 # Study area
 
@@ -145,8 +145,6 @@ ct_data$Unemployme[ct_data$Unemployme == 0 & is.na(ct_data$Income)] <- NA
 ```
 
 First, choropleth maps were created to display the distribution of data and explore the relationship between income (Figure \ref{fig:income-to}), unemployment (Figure \ref{fig:unemployment-to}) and theft rate by classification (Figures 4-7) in Toronto in 2016.
-
-\newpage
 
 ```{r income-plot, echo=FALSE, fig.cap={"\\label{fig:income-to}Median Income of Toronto Census Tracts"}}
 ggplot(ct_data) +
