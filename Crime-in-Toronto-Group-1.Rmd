@@ -21,7 +21,7 @@ author:
 subject: "ENVSOCTY 4GA3: Applied Spatial Statistics"
 abstract: "This paper reports our analysis of crime data in Toronto, Ontario, Canada, and its relationship with income and unemployment rate at the level of census tracts. Data were obtained from the Toronto Police Services and the Canadian Census."
 keywords: "crime, unemployment, income, spatial analysis"
-date: "4/18/2024"
+date: "4/19/2024"
 output:
   pdf_document:
     # The project-template-default.tex file was minimally adapted from Steven V. Miller's template for academic manuscripts. See:
@@ -50,7 +50,7 @@ library(stargazer) # creates tables of regression models
 ```
 
 ```{r read-census-data, include=FALSE}
-shapefile_path <- "C:/Users/willd/OneDrive/Desktop/Data/CrimesbyCT.shp"
+shapefile_path <- "C:/Users/willd/OneDrive/Desktop/Data/CrimesbyCT.shp" # Set this line to correct shapefile path, data can be located under "https://github.com/jujujames/4GA3_Group1_FinalReport/tree/main/data"
 
 ct_data <- st_read(shapefile_path)
 
@@ -68,15 +68,15 @@ To cite references in your bibliography.bib file, use [@item] if you want it to 
 <!--Use "#" for section headers-->
 # Introduction
 
-Police-reported crimes in Canada have demonstrated an unsettling increase for two consecutive years (Government of Canada, 2023). This concerning trend is particularly acute in urban areas like Toronto, where the confluence of socioeconomic disparities and crime rates presents complex challenges. As Canada's largest metropolitan city, with a population nearing 3 million, Toronto should serve as an example of what other Canadian cities should strive for (OECD, 2024). However, the persistent upward trajectory, notably in property crimes, including theft, constitutes approximately 15% of total crime occurrences between 2014 and 2022. This raises the question of what factors are causing this trend. Understanding that the COVID-19 pandemic continued to have profound impacts on Canada’s economy, it heavily disrupted the economic lives of Canadians in regards to an uptick in unemployment and a decrease in income (Moreau, 2022). To understand this possible connection further, this report aims to explore the relationships between income and unemployment and how they may lead to theft-related crimes in Toronto. In order to assess any possible relationships, previous studies have been analyzed, and correlations between both income and unemployment have been identified as having possible connections to criminal activity.
+Police-reported crimes in Canada have demonstrated an unsettling increase for two consecutive years (Government of Canada, 2023). This concerning trend is particularly acute in urban areas like Toronto, where the confluence of socioeconomic disparities and crime rates presents complex challenges. As Canada's largest metropolitan city, with a population nearing 3 million (OECD, 2024), Toronto represents the future of other Canadian metropolitan areas. However, the persistent upward trajectory, notably in property crimes, including theft, constitutes approximately 15% of total crime occurrences between 2014 and 2022. This raises the question of what factors are causing this trend. This report aims to explore the relationships between income and unemployment and how they may lead to theft-related crimes in Toronto. To assess any possible relationships, previous studies have been analysed, and correlations between both income and unemployment have been identified as having possible connections to criminal activity.
 
 # Background
 
-Crime rates related to unemployment and income are influenced by a variety of factors, with unemployment and income playing a significant role in shaping criminal activities. Research has shown that these two factors have a positive correlation (Dizman, 2020). The COVID pandemic has left a ripple effect on the economic landscape, causing those with lower economic status to resort to crime, highlighting the impacts of economic factors on criminal behavior over the past few years (Rehaman, 2022). Moreover, the effects of income on crime have been a subject of interest, with studies done that suggest that economic welfare plays a crucial role in crime reduction (Bianchi & Chen, 2021). 
+Crime rates related to unemployment and income are influenced by a variety of factors, with unemployment and income playing a significant role in shaping criminal activities. Research has shown that these two factors have a positive correlation (Dizman, 2020). Those with lower economic status can resort to crime, highlighting the impacts of economic factors on criminal behaviour (Rehaman, 2022). Moreover, the effects of income on crime have been a subject of interest, with studies suggesting that economic welfare plays a crucial role in crime reduction (Bianchi & Chen, 2021). 
 
-From 2021 to 2023, auto theft in Toronto has seen a notable rise, with a nearly 85% increase within this time range, with 6,642 reported auto thefts in 2021 and 12,262 in 2023 (Toronto Police Service, 2024). To put that into perspective, roughly 34 vehicles are stolen daily, or every 40 minutes (Fanfair, 2024). The neighborhood with the most auto theft took place in West Humber Claire, with 833 cases (Toronto Police Service, 2024). This neighborhood is located in the outer board of Toronto, and in 2020, 12.9% of the population will be considered low-income, and roughly 10% will be unemployed (City of Toronto, 2023). The high volume of auto theft in the outer regions of Toronto makes them more susceptible to the effects of the changing economic landscape caused by the pandemic. This indicates that this portion of the population is more likely to result in criminal activity. As the chief of police has noted, the vehicle's thrift is a lucrative business right now because of the high demand, and with that, criminals are migrating towards an easy payday (Fanfair, 2024). 
+From 2021 to 2023, auto theft in Toronto has seen a notable rise, with a nearly 85% increase within this time range, with 6,642 reported auto thefts in 2021 and 12,262 in 2023 (Toronto Police Service, 2024). To put that into perspective, roughly 34 vehicles are stolen daily, or every 40 minutes (Fanfair, 2024). The neighborhood with the most auto theft took place in West Humber Clairville, with 833 cases (Toronto Police Service, 2024). This neighborhood is located on the outer border of Toronto, and in 2020, 12.9% of the population was considered low-income, and roughly 10% were unemployed (City of Toronto, 2023). The high volume of auto theft in the outer regions of Toronto makes them more susceptible to the effects of the changing economic landscape caused by the pandemic. This indicates that this portion of the population is more likely to result in criminal activity. As the chief of police has noted, vehicle theft is a lucrative business right now because of the high demand, and with that, criminals are migrating towards an easy payday (Fanfair, 2024). 
 
-In terms of bike thefts, there was a small spike in Toronto from 2022 to 2024, as according to the Toronto Police Service Public Safety data, bike thefts total rose from 323 to 424. ~40% of which took place in residential areas (Toronto Police Services, 2024). The rise of bike thefts over the years is caused by a similar reason as auto thefts, as thieves and criminals are a way to mitigate their own economic challenges and status. Bicycle thieves see the reward as being far greater than the risk of stealing vehicles, as stealing bikes is easier and the chances of getting caught are rare (SoCalcycling, 2022). The Toronto Police Service suggests that the use of a proper bicycle rack and bike lock are the best measures to discourage or slow down bike thieves (Toronto Police Service, 2024). But less privileged neighborhoods across Toronto aren’t as fortunate, as proper bicycle racks aren’t as widely available compared to places like the downtown core.
+In terms of bike thefts, there was a small spike in Toronto from 2022 to 2024, as according to the Toronto Police Service Public Safety data, bike thefts total rose from 323 to 424. About 40% of these took place in residential areas (Toronto Police Services, 2024). The rise of bike thefts over the years is caused by a similar reason to auto thefts, as for thieves and criminals they are a way to mitigate their own economic challenges and status. Bicycle thieves see the reward as being far greater than the risk of stealing vehicles, as stealing bikes is easier and the chances of getting caught are rare (SoCalcycling, 2022). The Toronto Police Service suggests that the use of a proper bicycle rack and bike lock are the best measures to discourage or slow down bike thieves (Toronto Police Service, 2024). But less privileged neighborhoods across Toronto aren’t as fortunate, as proper bicycle racks aren’t as widely available compared to places like the downtown core.
 
 For the purposes of this study, four types of crime were taken into consideration. These crimes are robbery, auto theft, break and enter, and theft over $5000, standardized as rates per 1000 people.
 
@@ -145,6 +145,8 @@ ct_data$Unemployme[ct_data$Unemployme == 0 & is.na(ct_data$Income)] <- NA
 ```
 
 First, choropleth maps were created to display the distribution of data and explore the relationship between income (Figure \ref{fig:income-to}), unemployment (Figure \ref{fig:unemployment-to}) and theft rate by classification (Figures 4-7) in Toronto in 2016.
+
+\newpage
 
 ```{r income-plot, echo=FALSE, fig.cap={"\\label{fig:income-to}Median Income of Toronto Census Tracts"}}
 ggplot(ct_data) +
@@ -374,9 +376,11 @@ moran.plot(ct_data$Robbery_rate, weights,
            ylab = "Spatial Lag of Standardized Robbery Rate",
            main = "Moran's I Plot for Robbery Rate, per 1000 people")
 ```
-*This scatter plot visualizes the spatial autocorrelation of the standardized robbery rate per 1000 people in Toronto. Data points represent areas, plotted with their standardized robbery rate against their spatial lag of the robbery rate. A positive trend line indicates that areas with high robbery rates are often located near other areas with similarly high rates, suggesting a clustering effect within the city.*
 
 In the case of the robbery rate within Toronto, Moran’s I statistic is positive, and the associated p-value is very low (p-value = 3.983×10-10), rejecting the null hypothesis that the spatial pattern is random. This significant positive Moran’s I statistic indicates a spatial clustering where high robbery rates are found near other high-rate areas, and the reverse is true for areas with low rates. This clustering effect is visually confirmed in Figure \ref{fig:moran-robbery}, showing a definite trend of spatial dependence with pockets of high-high and low-low clustering evident across the city.
+
+
+\newpage
 
 ```{r moran-plot-auto, echo=FALSE, fig.cap={"\\label{fig:moran-auto}Moran's I Plot for Auto Theft Rate in Toronto"}}
 moran.plot(ct_data$Auto_Theft_rate, weights, 
@@ -384,9 +388,11 @@ moran.plot(ct_data$Auto_Theft_rate, weights,
            ylab = "Spatial Lag of Standardized Auto Theft Rate", 
            main = "Moran's I Plot for Auto Theft Rate, per 1000 people")
 ```
-*The plot displays the spatial autocorrelation for the standardized auto theft rate per 1000 people. It shows a significant positive relationship between the rate of auto theft and its spatial lag, indicating that areas with high instances of auto theft tend to be geographically clustered. Some outliers suggest areas with exceptionally high theft rates.*
 
 Similar patterns are observable in the auto theft rate data. The positive Moran’s I statistic and the extremely low p-value (p-value = 1.475×10-15) indicate non-randomness. Figure \ref{fig:moran-auto} illustrates a clear non-random pattern where high auto theft rates cluster in particular neighborhoods, affirming the hypothesis of non-random spatial patterns.
+
+
+\newpage
 
 ```{r moran-plot-break, echo=FALSE, fig.cap={"\\label{fig:moran-break}Moran's I Plot for Break and Enter Rate in Toronto"}}
 moran.plot(ct_data$Break_and_rate, weights, 
@@ -394,9 +400,11 @@ moran.plot(ct_data$Break_and_rate, weights,
            ylab = "Spatial Lag of Standardized Break and Enter Rate", 
            main = "Moran's I Plot for Break and Enter Rate, per 1000 people")
 ```
-*This scatter plot depicts the spatial autocorrelation of break and enter rates, standardized per 1000 people. It shows a positive correlation between the break and enter rate and its spatial lag, indicating a tendency for such crimes to cluster in certain areas within the city, revealing potential hot spots for this type of crime.*
 
 The break and enter rates demonstrate a positive Moran’s I statistic with a very small p-value(p-value = 1.824×10-14), leading to the rejection of the null hypothesis and suggesting a non-random spatial pattern. Figure \ref{fig:moran-break} underlines this clustering of break and enter incidents, with areas of high rates situated near similar areas, reinforcing the concept of spatial autocorrelation within this type of crime.
+
+
+\newpage
 
 ```{r moran-plot-theft-over, echo=FALSE, fig.cap={"\\label{fig:moran-theft-over}Moran's I Plot for Theft Over $5000 Rate in Toronto"}}
 moran.plot(ct_data$Theft_Over_rate, weights, 
@@ -404,9 +412,11 @@ moran.plot(ct_data$Theft_Over_rate, weights,
            ylab = "Spatial Lag of Standardized Theft Over $5000 Rate", 
            main = "Moran's I Plot for Theft Over $5000 Rate, per 1000 people")
 ```
-*The graph represents the spatial autocorrelation of theft over the $5000 rate, standardized per 1000 inhabitants. The positive slope of the trend line suggests a moderate degree of clustering, with areas of high rates of high-value theft being adjacent to similar areas, although with fewer extreme values compared to other crime types.*
 
 Furthermore, the theft over $5000 rate shows a positive Moran’s I statistic, indicating moderate spatial clustering, showing a non-random pattern confirmed by the low p-value (p-value = 1.463×10-6). The moderate clusters of both high and low theft rates are identifiable in Figure \ref{fig:moran-theft-over}, although they are subtler in comparison to the other crime types.
+
+
+\newpage
 
 ## Correlation and Linear Regression Analysis
 
@@ -442,7 +452,6 @@ stargazer(logregRobbery1,
 logreggraphRobbery1 <- Robbery1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=10.5, label.y=190)
 logreggraphRobbery1
 ```
-*The plot examines the relationship between log-transformed median income and the standardized robbery rate per 1000 people. Each dot represents an observation of the two variables in the dataset. The red line depicts a linear regression fit, showing a slight downward trend, indicating that higher log-transformed median income levels are associated with lower robbery rates. The shaded area around the regression line represents the 95% confidence interval, underscoring the uncertainty in the estimate.*
 
 ```{r robbery-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:robbery-regression-2}Correlation Analysis of Unemployment Rate and Robbery Rate in Toronto"}}
 Robbery2 = ggplot(data=ct_data, aes(x=Unemployme, y=Robbery_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Robbery Rate (per 1000 people)", title="Correlation between Unemployment Rate and Robbery Rate")
@@ -470,7 +479,8 @@ quadreggraphRobbery2 <- Robbery2 + geom_smooth(method = "lm", formula = y ~ poly
   stat_regline_equation(label.x=0, label.y=190)
 quadreggraphRobbery2
 ```
-*The plot examines the relationship between the unemployment rate and the standardized robbery rate per 1000 people. The points are relatively scattered, and the fitted regression line suggests there is a slight quadratic relationship between the unemployment rate and robbery rates, as indicated by the slope of the regression line and its wide confidence interval.*
+
+\newpage
 
 Looking at robbery rates, Kendall's tau correlation with income is weak, negative and statistically significant (tau = -0.155, p = 3.08e-08), suggesting that as income increases, robbery rates tend to decrease. The linear regression model of log-transformed median income corroborates this with a negative coefficient for income (Estimate = -5.665, p = 7.632e-05), although the model explains a relatively small portion of the variance in robbery rates (Adjusted R-squared = 0.02553). Kendall’s tau correlation with unemployment is weak, positive, and statistically significant (tau = 0.785, p = 0.0054), suggesting that as unemployment increases, robbery rates tend to increase. The linear regression model with a quadratic transformation of the unemployment variable corroborates this with a positive coefficient for unemployment at the 2nd degree (Estimate = 73.8392, p = 4.84e-05), although the model explains a relatively small portion of the variance in robbery rates (Adjusted R-squared = 0.03109).
 
@@ -499,7 +509,6 @@ stargazer(linearregAuto1,
 linearreggraphAuto1 <- Auto1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=300)
 linearreggraphAuto1
 ```
-*The scatter plot assessing the correlation between median income and auto theft rates, standardized per 1000 people. The plot suggests a very subtle positive trend, as indicated by the regression line, implying that areas with higher median incomes may have slightly higher auto theft rates. However, the confidence interval shows significant uncertainty in this trend.*
 
 ```{r auto-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:auto-regression-2}Correlation Analysis of Unemployment Rate and Auto Theft Rate in Toronto"}}
 Auto2 = ggplot(data=ct_data, aes(x=Unemployme, y=Auto_Theft_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Auto Theft Rate (per 1000 people)", title="Correlation between Unemployment Rate and Auto Theft Rate")
@@ -526,7 +535,8 @@ stargazer(linearregAuto2,
 linearreggraphAuto2 <- Auto2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=300)
 linearreggraphAuto2
 ```
-*This graph explores the relationship between the unemployment rate and the auto theft rate per 1000 people. The regression line suggests a slight negative association, indicating that higher unemployment rates might correlate with lower auto theft rates, but the relationship is not strong, as reflected by the wide confidence interval.*
+
+\newpage
 
 For auto theft rates, the correlation with income shows a slight positive trend, and it is statistically significant (tau = 0.142, p = 4.03e-07). This suggests that as income increases, there's a marginal tendency for auto theft rates to rise. However, the relationship between income and auto theft rates is not captured strongly in a linear model, as indicated by a non-significant p-value (p = 0.0827) from the regression analysis. Conversely, the link between auto theft rates and unemployment shows a negative but weak and statistically insignificant correlation (tau = -0.0497, p = 0.07826). This suggests that unemployment has a negligible effect on the rate of auto theft. This lack of significance is confirmed by the linear regression analysis, which returns a high p-value (p = 0.0244), implying that the regression model fails to capture any substantial linear effect of unemployment on auto theft rates, as evidenced by a very low adjusted R-squared value (Adjusted R-squared = 0.007154), highlighting a minimal explained variance in auto theft rates by these socioeconomic factors.
 
@@ -556,7 +566,6 @@ stargazer(linearregBreak1,
 linearreggraphBreak1 <- Break1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=250)
 linearreggraphBreak1
 ```
-*The plot examines the link between median income and the rate of break and enters, standardized per 1000 people. The positive slope of the regression line indicates that higher median income levels might be associated with increased rates of break and entry, with the shaded area indicating the confidence interval around the regression estimate.*
 
 ```{r break-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:break-regression-2}Correlation Analysis of Unemployment and Break and Enter Rate in Toronto"}}
 Break2 = ggplot(data=ct_data, aes(x=Unemployme, y=Break_and_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Break and Enter Rate (per 1000 people)", title="Correlation between Unemployment Rate and Break and Enter Rate")
@@ -584,7 +593,8 @@ stargazer(linearregBreak2,
 linearreggraphBreak2 <- Break2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=250)
 linearreggraphBreak2
 ```
-*The plot examines the relationship between the unemployment rate and the break and enter rate per 1000 people is analyzed. The regression line, showing a downward trend, suggests that higher unemployment rates may be associated with lower break and enter rates, but the broad confidence interval indicates substantial uncertainty in the prediction.*
+
+\newpage
 
 The break and enter rates have a moderately positive, statistically significant association with income (tau = 0.229, p = 3.099e-16) and a moderately negative, statistically significant correlation with unemployment (tau = -0.223, p = 2.302e-15). The regression models show that both income (Estimate: 4.50e-05, p = 0.003356) and unemployment (Estimate: -3.0064, p = 6.968e-09) are moderate predictors with a linear relationship, with higher income associated with higher break and enter rates and higher unemployment leading to lower rates. However, the variation explained by both models remains low (adjusted R-squared = 0.01333 and 0.05583, respectively).
 
@@ -614,7 +624,6 @@ stargazer(linearregTheftOver1,
 linearreggraphTheftOver1 <- TheftOver1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=150)
 linearreggraphTheftOver1
 ```
-*The scatter plot displays the correlation between median income and the rate of thefts over $5000 per 1000 people. The regression line shows an almost flat slope, indicating a negligible association between median income and high-value theft rates, with a confidence interval that reflects the estimate's imprecision.*
 
 ```{r theft-over-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:break-regression-2}Correlation Analysis of Unemployment Rate and Theft Over $5000 Rate in Toronto"}}
 TheftOver2 = ggplot(data=ct_data, aes(x=Unemployme, y=Theft_Over_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Theft Over $5000 Rate (per 1000 people)", title="Correlation between Unemployment Rate and Theft Over $5000 Rate")
@@ -643,7 +652,8 @@ cubreggraphTheftOver2 <- TheftOver2 + geom_smooth(method = "lm", formula = y ~ p
   stat_regline_equation(label.x=0, label.y=150)
 cubreggraphTheftOver2
 ```
-*This graph illustrates the connection between the unemployment rate and theft over $5000 rate per 1000 people. The downward slope of the cubic regression line implies a negative relationship, suggesting that areas with higher unemployment rates might experience lower rates of high-value thefts, though the extent of this association is not strongly determined, as seen by the wide confidence interval.*
+
+\newpage
 
 Lastly, the rate of theft over $5000 has a weak, positive, and statistically significant correlation with income (tau = 0.081, p = 0.003859), however, the regression model shows that this relationship is not well-explained linearly. (p = 0.4396). Despite this, other types of polynomial or logarithmic transformation did not provide a better fit for the relationship between these two variables. Kendall’s tau correlation with unemployment is weak, negative, and statistically significant (tau = -0.1215, p = 1.635e-05), and the cubic relationship is effectively captured by the regression model (p = 5.478e-10). These relationships are still fairly weak, as shown in the respective adjusted R-squared values (-0.0007 and 0.07335).
 
@@ -826,8 +836,32 @@ When considering all four models together, Figure \ref{fig:robbery-lag}, the mod
 
 # Conclusion
 
-A
+After the analysis of census tracts in Toronto in various ways, they reveal distinct spatial patterns in income, unemployment, and various types of crime. Higher income areas, particularly in the center of northern Old Ontario and Etobicoke, exhibit lower unemployment rates but are not immune to crime. Robbery, break and enter, and theft over $5000 are concentrated downtown, northern Scarborough, and North York, while auto theft primarily occurs in Etobicoke. Our spatial autocorrelation analysis confirms these patterns are non-random; however, when performing a Kendall Tau correlation and linear regression to determine if there is a true relationship between these variables, for the most part, the correlation for each tends to be weak. While income is weakly and negatively associated with robbery, it correlates positively with auto theft, break and entering, and theft over $5000. Unemployment shows a weak, positive correlation with robbery, and a moderately negative one with break and entering. Auto theft appeared to have the least statistically significant relationship with income and unemployment, most likely due to lack of vehicle ownership statistics as well as them having the highest likelihood to be located at intersections, where they do not belong to any one census tract. The most accurate spatial lag model produced (Figure \ref{fig:robbery-lag}) indicates that robbery occurs at lower rates in central Toronto, where the highest income households reside.
+
+While there are some statistically significant trends, the complexity of factors influencing crime suggests that while spatial lag models provide some predictive power, they cannot fully predict exactly where and why various crimes take place. It is recommended that further research be done with a higher degree of accuracy to truly determine whether these factors play a large role in theft related crimes. Additionally, conducting an analysis on more recent data such as the upcoming census data that will be collected in 2026 would also be recommended as it would provide a more contemporary model of how these factors impact crimes across Toronto. 
+
 
 # References
 
-A
+Baianchi, G., & Chen, Y. (2021, March 21). Testing effects of hospitality employment on property crime in the United States. SageJournals. https://journals.sagepub.com/doi/10.1177/13548166211001180
+
+City of Toronto. (2023, January 31). Ward Profile: Etobicoke North. https://www.toronto.ca/city-government/data-research-maps/neighbourhoods-communities/ward-profiles/ 
+
+Dızman Zeynep Şentürk (2020). Analyzing crime and unemployment from a sociological perspective. pamukkale university journal of social sciences institute. https://doi.org/10.30794/pausbed.789991
+
+Government of Canada. (2023, July 27). Police-reported crime statistics in Canada, 2022. https://www150.statcan.gc.ca/n1/daily-quotidien/230727/dq230727b-eng.htm
+
+Moreau, G. (2022, August 2). Police-reported crime statistics in Canada, 2021. 
+Government of Canada, Statistics Canada. https://www150.statcan.gc.ca/n1/pub/85-002-x/2022001/article/00013-eng.htm
+
+Oecd. (2024, April). Regional Demography: Toronto . OECD.Stat. https://stats.oecd.org/Index.aspx?DataSetCode=REGION_DEMOGR
+                                                                                                                                                                            Fanfair, R. (2024, February). Bold Partnerships Needed to Fight Auto Theft. Toronto Police Service. https://www.tps.ca/media-centre/stories/bold-partnerships-needed-to-fight-auto-theft/
+
+SoCalCycling. (2022, February 17). Bicycle theft is becoming increasingly common. SoCalCycling.com. https://socalcycling.com/2022/02/28/bicycle-theft-is-becoming-increasingly-common/
+
+Toronto Police Service. (2024a, April 4). TPS Crime Statistics - Auto Theft. Toronto Police Service Public Safety Data Portal. https://data.torontopolice.on.ca/pages/auto-theft
+
+Toronto Police Service. (2024b, April 15). TPS Crime Statistics - Bicycle Thefts. 
+
+Toronto Police Service Public Safety Data Portal. https://data.torontopolice.on.ca/pages/bicycle-thefts 
+
