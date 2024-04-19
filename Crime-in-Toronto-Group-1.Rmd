@@ -41,6 +41,8 @@ library(scales) # enables further scale formatting in ggplot2
 library(spdep) # package for spatial data analysis
 library(tidyverse) # family of packages for data manipulation, analysis, and visualization (includes ggplot2)
 library(spatialreg) # package for spatial regression analysis (lagsarlm)
+library(xtable) # creates LaTeX tables for Moran and correlation tests
+library(stargazer) # creates tables of regression models
 ```
 
 ```{r write-package-bib, include=FALSE}
@@ -97,8 +99,8 @@ ggplot(ct_data) +
   panel.grid.major = element_blank(),
   panel.grid.minor = element_blank() 
 )
-
 ```
+
 # Data
 
 A shapefile of Toronto Census Tracts was created with crime and census data associated. To access the census tracts shapefile and census data, the cancensus package for R was used. 2016 Canadian Census data was accessed in a simple features format for CSD #3520005 (The City of Toronto). The following vectors were accessed: (1) Median Total Household Income ($) (vector code: v_CA16_2397), (2) Unemployment (%) (vector code: v_CA16_5618), and (3) Total Population (vector code: v_CA16_401). Using the sf package for R, the census data was exported as a shapefile.
@@ -164,6 +166,9 @@ ggplot(ct_data) +
 
 In Figure \ref{fig:income-to}, it can be seen that the neighbourhoods with above-average income are concentrated in the centre (Northern Old Toronto) and southwest (Etobicoke) regions of Toronto. The cluster of neighbourhoods in Northern Old Toronto are characterized by much higher incomes (above \$600,000) than the median income across the whole city, while the cluster in Etobicoke is another high-income area (approximately \$400,000).
 
+
+\newpage
+
 ```{r unemployment-plot, echo=FALSE, fig.cap={"\\label{fig:unemployment-to}Unemployment Rate of Toronto Census Tracts"}}
 ggplot(ct_data) +
   geom_sf(aes(fill = Unemployme), color = "black", size = 0.1) +
@@ -186,6 +191,9 @@ Figure \ref{fig:unemployment-to} shows the unemployment rate does not appear to 
 
 Figures 4-7 depict information on theft rate in Toronto calculated in rates per 1000 people, classified by robbery rate (Figure \ref{fig:robbery-to}), auto theft rate (Figure \ref{fig:auto-to}), break and enter rate (Figure \ref{fig:break-to}), and the rate of theft over $5000 (Figure \ref{fig:theft-over-to}).
 
+
+\newpage
+
 ```{r robbery-plot, echo=FALSE, fig.cap={"\\label{fig:robbery-to}Robbery Rate (per 1000 people) of Toronto Census Tracts"}}
 ggplot(ct_data) +
   geom_sf(aes(fill = Robbery_rate), color = "black", size = 0.1) +
@@ -205,6 +213,9 @@ ggplot(ct_data) +
 ```
 
 From Figure \ref{fig:robbery-to}, the robbery rate tends to occur in the downtown core, one tract in Northern Scarborough, and a couple of tracts in northernmost North York. In particular, the highest robbery rates occur in a census tract adjacent to Lake Ontario in the south and a census tract in northern Scarborough.
+
+
+\newpage
 
 ```{r auto-plot, echo=FALSE, fig.cap={"\\label{fig:auto-to}Auto Theft Rate (per 1000 people) of Toronto Census Tracts"}}
 ggplot(ct_data) +
@@ -226,6 +237,9 @@ ggplot(ct_data) +
 
 The auto theft rate in Figure \ref{fig:auto-to} follows a different trend compared to the robbery rate, which is concentrated primarily in northwest Etobicoke. Etobicoke as a whole tends to have a higher auto theft crime rate, particularly a cluster of census tracts in northern Etobicoke, as well as one census tract in northern Scarborough.
 
+
+\newpage
+
 ```{r break-plot, echo=FALSE, fig.cap={"\\label{fig:break-to}Break and Enter Rate (per 1000 people) of Toronto Census Tracts"}}
 ggplot(ct_data) +
   geom_sf(aes(fill = Break_and_rate), color = "black", size = 0.1) +
@@ -245,6 +259,9 @@ ggplot(ct_data) +
 ```
 
 From Figure \ref{fig:break-to}, the break and enter rate shows similar spatial trends as the robbery rate. The census tracts with higher rates are concentrated in the downtown core, one tract in Northern Scarborough, and a couple of tracts in northernmost North York. In particular, the highest break and enter rates occur in a census tract adjacent to Lake Ontario in downtown Toronto, and a census tract in northern Scarborough.
+
+
+\newpage
 
 ```{r theft-over-plot, echo=FALSE, fig.cap={"\\label{fig:theft-over-to}Theft Over $5000 Rate (per 1000 people) of Toronto Census Tracts"}}
 ggplot(ct_data) +
@@ -266,14 +283,17 @@ ggplot(ct_data) +
 
 The rate of theft over \$5000 is relatively consistent with the pattern observed in the cases of robbery and break and enter theft rates. Scarborough has a few census tracts with moderately higher rates than most of the city. The tract in the downtown core adjacent to Lake Ontario exhibits a significantly higher rate of theft over \$5000, while other tracts in the downtown core, northern Scarborough, and northernmost North York also show relatively high rates of theft over \$5000.
 
+
+\newpage
+
 ## Spatial Autocorrelation
 
 Spatial autocorrelation is an essential factor to consider in the analysis of crime rates within Toronto before engaging in regression analysis to understand the impact of socioeconomic variables on the rate of crime. The non-random patterns of crime distribution are key to using regression analysis to yield more informative insights into the factors driving these patterns.
 
 Using a measure of spatial autocorrelation, Moran's I helps determine whether the spatial distribution of crime rates is inherently random or if there is a pattern of spatial dependence. By testing the null hypothesis that the spatial pattern is random, we can ascertain the significance of the observed patterns. For each of the Moran’s I tests, a nearest neighbour threshold of 2222 meters was defined, as the minimum value to assign at least one neighbour to every census tract.
 
-Table 1. Results of Moran I Spatial Autocorrelation Test for Various Crime Rates in Toronto
-```{r moran-tests, echo=FALSE}
+Tables 1-4: Results of Moran I Spatial Autocorrelation Test for Various Crime Rates in Toronto
+```{r moran-tests, echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
 ct_data <- ct_data %>%
   filter(complete.cases(Robbery_rate, Auto_Theft_rate, Break_and_rate, Theft_Over_rate))
 
@@ -284,27 +304,77 @@ neighbors <- dnearneigh(coords, 0, 2222)
 weights <- nb2listw(neighbors, style="W")
 
 moran_robbery <- moran.test(ct_data$Robbery_rate, weights)
-print(moran_robbery)
 
 moran_auto_theft <- moran.test(ct_data$Auto_Theft_rate, weights)
-print(moran_auto_theft)
 
 moran_break_enter <- moran.test(ct_data$Break_and_rate, weights)
-print(moran_break_enter)
 
 moran_theft_over <- moran.test(ct_data$Theft_Over_rate, weights)
-print(moran_theft_over)
-```
 
-As seen in the results in Table 1., all four tests indicate significant positive spatial autocorrelation. This means that areas with high crime rates tend to be clustered together for each type of crime. This finding can be important for law enforcement and urban planning, as it suggests that interventions in high-crime areas might not only affect those specific areas, but also their surrounding regions. The consistency of negative expectations and very low p-values across all tests strengthens the evidence that these spatial patterns are not random but rather a significant characteristic of the dataset.
+moran_robbery_results <- data.frame(
+  Metric = c("Moran's I statistic", "Expectation", "Variance", "Standard Deviate", "P-value"),
+  Value = c(format(0.0954131906, scientific = TRUE), 
+            format(-0.0017605634, scientific = TRUE), 
+            format(0.0002500174, scientific = TRUE), 
+            format(6.1456, scientific = FALSE), 
+            format(3.983e-10, scientific = TRUE))
+)
+
+moran_auto_theft_results <- data.frame(
+  Metric = c("Moran's I statistic", "Expectation", "Variance", "Standard Deviate", "P-value"),
+  Value = c(format(0.1194287243, scientific = TRUE), 
+            format(-0.0017605634, scientific = TRUE), 
+            format(0.0002357476, scientific = TRUE), 
+            format(7.893, scientific = FALSE), 
+            format(1.475e-15, scientific = TRUE))
+)
+
+moran_break_enter_results <- data.frame(
+  Metric = c("Moran's I statistic", "Expectation", "Variance", "Standard Deviate", "P-value"),
+  Value = c(format(0.1094931790, scientific = TRUE), 
+            format(-0.0017605634, scientific = TRUE), 
+            format(0.0002232952, scientific = TRUE), 
+            format(7.4452, scientific = FALSE), 
+            format(4.841e-14, scientific = TRUE))
+)
+
+moran_theft_over_results <- data.frame(
+  Metric = c("Moran's I statistic", "Expectation", "Variance", "Standard Deviate", "P-value"),
+  Value = c(format(0.067411572, scientific = TRUE), 
+            format(-0.001760563, scientific = TRUE), 
+            format(0.000218833, scientific = TRUE), 
+            format(4.676, scientific = FALSE), 
+            format(1.463e-06, scientific = TRUE))
+)
+
+moran_robbery_table <- xtable(moran_robbery_results, caption = "Moran's I Test for Robbery Rate")
+
+moran_auto_theft_table <- xtable(moran_auto_theft_results, caption = "Moran's I Test for Auto Theft Rate")
+
+moran_break_enter_table <- xtable(moran_break_enter_results, caption = "Moran's I Test for Break and Enter Rate")
+
+moran_theft_over_table <- xtable(moran_theft_over_results, caption = "Moran's I Test for Theft Over Rate")
+
+
+print(moran_robbery_table, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+
+print(moran_auto_theft_table, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+
+print(moran_break_enter_table, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+
+print(moran_theft_over_table, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+```
+\newpage
+
+As seen in the results in Tables 1-4, all four tests indicate significant positive spatial autocorrelation. This means that areas with high crime rates tend to be clustered together for each type of crime. This finding can be important for law enforcement and urban planning, as it suggests that interventions in high-crime areas might not only affect those specific areas, but also their surrounding regions. The consistency of negative expectations and very low p-values across all tests strengthens the evidence that these spatial patterns are not random but rather a significant characteristic of the dataset.
 
 ```{r moran-plot-robbery, echo=FALSE, fig.cap={"\\label{fig:moran-robbery}Moran's I Plot for Robbery Rate in Toronto"}}
 moran.plot(ct_data$Robbery_rate, weights, 
            xlab = "Standardized Robbery Rate", 
-           ylab = "Spatial Lag of Standardized Robbery Rate", 
+           ylab = "Spatial Lag of Standardized Robbery Rate",
            main = "Moran's I Plot for Robbery Rate, per 1000 people")
 ```
-## This scatter plot visualizes the spatial autocorrelation of the standardized robbery rate per 1000 people in Toronto. Data points represent areas, plotted with their standardized robbery rate against their spatial lag of the robbery rate. A positive trend line indicates that areas with high robbery rates are often located near other areas with similarly high rates, suggesting a clustering effect within the city.
+*This scatter plot visualizes the spatial autocorrelation of the standardized robbery rate per 1000 people in Toronto. Data points represent areas, plotted with their standardized robbery rate against their spatial lag of the robbery rate. A positive trend line indicates that areas with high robbery rates are often located near other areas with similarly high rates, suggesting a clustering effect within the city.*
 
 In the case of the robbery rate within Toronto, Moran’s I statistic is positive, and the associated p-value is very low (p-value = 3.983×10-10), rejecting the null hypothesis that the spatial pattern is random. This significant positive Moran’s I statistic indicates a spatial clustering where high robbery rates are found near other high-rate areas, and the reverse is true for areas with low rates. This clustering effect is visually confirmed in Figure \ref{fig:moran-robbery}, showing a definite trend of spatial dependence with pockets of high-high and low-low clustering evident across the city.
 
@@ -314,7 +384,7 @@ moran.plot(ct_data$Auto_Theft_rate, weights,
            ylab = "Spatial Lag of Standardized Auto Theft Rate", 
            main = "Moran's I Plot for Auto Theft Rate, per 1000 people")
 ```
-## The plot displays the spatial autocorrelation for the standardized auto theft rate per 1000 people. It shows a significant positive relationship between the rate of auto theft and its spatial lag, indicating that areas with high instances of auto theft tend to be geographically clustered. Some outliers suggest areas with exceptionally high theft rates.
+*The plot displays the spatial autocorrelation for the standardized auto theft rate per 1000 people. It shows a significant positive relationship between the rate of auto theft and its spatial lag, indicating that areas with high instances of auto theft tend to be geographically clustered. Some outliers suggest areas with exceptionally high theft rates.*
 
 Similar patterns are observable in the auto theft rate data. The positive Moran’s I statistic and the extremely low p-value (p-value = 1.475×10-15) indicate non-randomness. Figure \ref{fig:moran-auto} illustrates a clear non-random pattern where high auto theft rates cluster in particular neighborhoods, affirming the hypothesis of non-random spatial patterns.
 
@@ -324,7 +394,7 @@ moran.plot(ct_data$Break_and_rate, weights,
            ylab = "Spatial Lag of Standardized Break and Enter Rate", 
            main = "Moran's I Plot for Break and Enter Rate, per 1000 people")
 ```
-## This scatter plot depicts the spatial autocorrelation of break and enter rates, standardized per 1000 people. It shows a positive correlation between the break and enter rate and its spatial lag, indicating a tendency for such crimes to cluster in certain areas within the city, revealing potential hot spots for this type of crime.
+*This scatter plot depicts the spatial autocorrelation of break and enter rates, standardized per 1000 people. It shows a positive correlation between the break and enter rate and its spatial lag, indicating a tendency for such crimes to cluster in certain areas within the city, revealing potential hot spots for this type of crime.*
 
 The break and enter rates demonstrate a positive Moran’s I statistic with a very small p-value(p-value = 1.824×10-14), leading to the rejection of the null hypothesis and suggesting a non-random spatial pattern. Figure \ref{fig:moran-break} underlines this clustering of break and enter incidents, with areas of high rates situated near similar areas, reinforcing the concept of spatial autocorrelation within this type of crime.
 
@@ -334,7 +404,7 @@ moran.plot(ct_data$Theft_Over_rate, weights,
            ylab = "Spatial Lag of Standardized Theft Over $5000 Rate", 
            main = "Moran's I Plot for Theft Over $5000 Rate, per 1000 people")
 ```
-## The graph represents the spatial autocorrelation of theft over the $5000 rate, standardized per 1000 inhabitants. The positive slope of the trend line suggests a moderate degree of clustering, with areas of high rates of high-value theft being adjacent to similar areas, although with fewer extreme values compared to other crime types.
+*The graph represents the spatial autocorrelation of theft over the $5000 rate, standardized per 1000 inhabitants. The positive slope of the trend line suggests a moderate degree of clustering, with areas of high rates of high-value theft being adjacent to similar areas, although with fewer extreme values compared to other crime types.*
 
 Furthermore, the theft over $5000 rate shows a positive Moran’s I statistic, indicating moderate spatial clustering, showing a non-random pattern confirmed by the low p-value (p-value = 1.463×10-6). The moderate clusters of both high and low theft rates are identifiable in Figure \ref{fig:moran-theft-over}, although they are subtler in comparison to the other crime types.
 
@@ -344,120 +414,236 @@ Kendall's tau correlation provides a quantitative assessment of the relationship
 
 Linear regression analysis between the type of crime and both socioeconomic variables was performed to find the best-fitting model for observed data. These regression analyses include linear, quadratic-transformed, cubic-transformed, and logarithmic-transformed.
 
-```{r robbery-income-regression, echo=FALSE, fig.cap={"\\label{fig:robbery-regression-1}Correlation Analysis of Median Income and Robbery Rate in Toronto"}}
+```{r robbery-income-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:robbery-regression-1}Correlation Analysis of Median Income and Robbery Rate in Toronto"}}
 ct_data$Log_Unemployme <- log(ct_data$Unemployme + 1)
 ct_data$Log_Income <- log(ct_data$Income + 1)
 
 Robbery1 = ggplot(data=ct_data, aes(x=Log_Income, y=Robbery_rate))+geom_point(size=1)+labs(x="Log of Median Income ($)", y="Robbery Rate (per 1000 people)", title="Correlation between Log-Transformed Median Income and Robbery Rate")
 
 Robberycor1 <- cor.test(ct_data$Robbery_rate, ct_data$Income, method=c("kendall"))
-print(Robberycor1)
+
+robbery_cor_results1 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(-5.5368, scientific = FALSE),
+            format(3.08e-08, scientific = TRUE),
+            format(-0.1552228, scientific = FALSE))
+)
+
+robbery_cor_table1 <- xtable(robbery_cor_results1, caption = "Kendall's Rank Correlation Test for Robbery Rate and Income")
+
+print(robbery_cor_table1, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
 
 logregRobbery1 <- lm(Robbery_rate ~ Log_Income, data = ct_data)
-summary(logregRobbery1)
+
+stargazer(logregRobbery1,
+          header = FALSE,
+          title = "Linear Regression Model for Robbery Rate and Log-Transformed Income")
+
 logreggraphRobbery1 <- Robbery1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=10.5, label.y=190)
 logreggraphRobbery1
 ```
-## The plot examines the relationship between log-transformed median income and the standardized robbery rate per 1000 people. Each dot represents an observation of the two variables in the dataset. The red line depicts a linear regression fit, showing a slight downward trend, indicating that higher log-transformed median income levels are associated with lower robbery rates. The shaded area around the regression line represents the 95% confidence interval, underscoring the uncertainty in the estimate.
+*The plot examines the relationship between log-transformed median income and the standardized robbery rate per 1000 people. Each dot represents an observation of the two variables in the dataset. The red line depicts a linear regression fit, showing a slight downward trend, indicating that higher log-transformed median income levels are associated with lower robbery rates. The shaded area around the regression line represents the 95% confidence interval, underscoring the uncertainty in the estimate.*
 
-```{r robbery-unemployment-regression, echo=FALSE, fig.cap={"\\label{fig:robbery-regression-2}Correlation Analysis of Unemployment Rate and Robbery Rate in Toronto"}}
+```{r robbery-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:robbery-regression-2}Correlation Analysis of Unemployment Rate and Robbery Rate in Toronto"}}
 Robbery2 = ggplot(data=ct_data, aes(x=Unemployme, y=Robbery_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Robbery Rate (per 1000 people)", title="Correlation between Unemployment Rate and Robbery Rate")
 
 Robberycor2 <- cor.test(ct_data$Robbery_rate, ct_data$Unemployme, method=c("kendall"))
-print(Robberycor2)
+
+robbery_cor_results2 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(2.7822, scientific = FALSE),
+            format(0.0054, scientific = FALSE),
+            format(0.07845991, scientific = FALSE))
+)
+
+robbery_cor_table2 <- xtable(robbery_cor_results1, caption = "Kendall's Rank Correlation Test for Robbery Rate and Unemployment Rate")
+
+print(robbery_cor_table2, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
 
 quadregRobbery2 <- lm(Robbery_rate ~ poly(Unemployme, 2), data = ct_data)
-summary(quadregRobbery2)
+
+stargazer(quadregRobbery2,
+          header = FALSE,
+          title = "Linear Regression Model for Robbery Rate and Quadratic-Transformed Unemployment")
+
 quadreggraphRobbery2 <- Robbery2 + geom_smooth(method = "lm", formula = y ~ poly(x, 2), col = "red") + 
   stat_regline_equation(label.x=0, label.y=190)
 quadreggraphRobbery2
 ```
-## The plot examines the relationship between the unemployment rate and the standardized robbery rate per 1000 people. The points are relatively scattered, and the fitted regression line suggests there is a slight quadratic relationship between the unemployment rate and robbery rates, as indicated by the slope of the regression line and its wide confidence interval.
+*The plot examines the relationship between the unemployment rate and the standardized robbery rate per 1000 people. The points are relatively scattered, and the fitted regression line suggests there is a slight quadratic relationship between the unemployment rate and robbery rates, as indicated by the slope of the regression line and its wide confidence interval.*
 
 Looking at robbery rates, Kendall's tau correlation with income is weak, negative and statistically significant (tau = -0.155, p = 3.08e-08), suggesting that as income increases, robbery rates tend to decrease. The linear regression model of log-transformed median income corroborates this with a negative coefficient for income (Estimate = -5.665, p = 7.632e-05), although the model explains a relatively small portion of the variance in robbery rates (Adjusted R-squared = 0.02553). Kendall’s tau correlation with unemployment is weak, positive, and statistically significant (tau = 0.785, p = 0.0054), suggesting that as unemployment increases, robbery rates tend to increase. The linear regression model with a quadratic transformation of the unemployment variable corroborates this with a positive coefficient for unemployment at the 2nd degree (Estimate = 73.8392, p = 4.84e-05), although the model explains a relatively small portion of the variance in robbery rates (Adjusted R-squared = 0.03109).
 
-```{r auto-income-regression, echo=FALSE, fig.cap={"\\label{fig:auto-regression-1}Correlation Analysis of Median Income and Auto Theft Rate in Toronto"}}
+```{r auto-income-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:auto-regression-1}Correlation Analysis of Median Income and Auto Theft Rate in Toronto"}}
 Auto1 = ggplot(data=ct_data, aes(x=Income, y=Auto_Theft_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Auto Theft Rate (per 1000 people)", title="Correlation between Median Income and Auto Theft Rate")
 
 Autocor1 <- cor.test(ct_data$Auto_Theft_rate, ct_data$Income, method=c("kendall"))
-print(Autocor1)
+
+auto_cor_results1 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(5.0675, scientific = FALSE),
+            format(4.03e-07, scientific = TRUE),
+            format(0.1420655, scientific = FALSE))
+)
+
+auto_cor_table1 <- xtable(auto_cor_results1, caption = "Kendall's Rank Correlation Test for Auto Theft Rate and Income")
+
+print(auto_cor_table1, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
 
 linearregAuto1 <- lm(Auto_Theft_rate ~ Income, data = ct_data)
-summary(linearregAuto1)
+
+stargazer(linearregAuto1,
+          header = FALSE,
+          title = "Linear Regression Model for Auto Theft Rate and Income")
+
 linearreggraphAuto1 <- Auto1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=300)
 linearreggraphAuto1
 ```
-## The scatter plot assessing the correlation between median income and auto theft rates, standardized per 1000 people. The plot suggests a very subtle positive trend, as indicated by the regression line, implying that areas with higher median incomes may have slightly higher auto theft rates. However, the confidence interval shows significant uncertainty in this trend.
+*The scatter plot assessing the correlation between median income and auto theft rates, standardized per 1000 people. The plot suggests a very subtle positive trend, as indicated by the regression line, implying that areas with higher median incomes may have slightly higher auto theft rates. However, the confidence interval shows significant uncertainty in this trend.*
 
-```{r auto-unemployment-regression, echo=FALSE, fig.cap={"\\label{fig:auto-regression-2}Correlation Analysis of Unemployment Rate and Auto Theft Rate in Toronto"}}
+```{r auto-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:auto-regression-2}Correlation Analysis of Unemployment Rate and Auto Theft Rate in Toronto"}}
 Auto2 = ggplot(data=ct_data, aes(x=Unemployme, y=Auto_Theft_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Auto Theft Rate (per 1000 people)", title="Correlation between Unemployment Rate and Auto Theft Rate")
 
 Autocor2 <- cor.test(ct_data$Auto_Theft_rate, ct_data$Unemployme, method=c("kendall"))
-print(Autocor2)
+
+auto_cor_results2 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(-1.7609, scientific = FALSE),
+            format(0.07826, scientific = FALSE),
+            format(-0.04965818, scientific = FALSE))
+)
+
+auto_cor_table2 <- xtable(auto_cor_results2, caption = "Kendall's Rank Correlation Test for Auto Theft Rate and Unemployment Rate")
+
+print(auto_cor_table2, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
 
 linearregAuto2 <- lm(Auto_Theft_rate ~ Unemployme, data = ct_data)
-summary(linearregAuto2)
+
+stargazer(linearregAuto2,
+          header = FALSE,
+          title = "Linear Regression Analysis for Auto Theft Rate and Unemployment")
+
 linearreggraphAuto2 <- Auto2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=300)
 linearreggraphAuto2
 ```
-## This graph explores the relationship between the unemployment rate and the auto theft rate per 1000 people. The regression line suggests a slight negative association, indicating that higher unemployment rates might correlate with lower auto theft rates, but the relationship is not strong, as reflected by the wide confidence interval.
+*This graph explores the relationship between the unemployment rate and the auto theft rate per 1000 people. The regression line suggests a slight negative association, indicating that higher unemployment rates might correlate with lower auto theft rates, but the relationship is not strong, as reflected by the wide confidence interval.*
 
 For auto theft rates, the correlation with income shows a slight positive trend, and it is statistically significant (tau = 0.142, p = 4.03e-07). This suggests that as income increases, there's a marginal tendency for auto theft rates to rise. However, the relationship between income and auto theft rates is not captured strongly in a linear model, as indicated by a non-significant p-value (p = 0.0827) from the regression analysis. Conversely, the link between auto theft rates and unemployment shows a negative but weak and statistically insignificant correlation (tau = -0.0497, p = 0.07826). This suggests that unemployment has a negligible effect on the rate of auto theft. This lack of significance is confirmed by the linear regression analysis, which returns a high p-value (p = 0.0244), implying that the regression model fails to capture any substantial linear effect of unemployment on auto theft rates, as evidenced by a very low adjusted R-squared value (Adjusted R-squared = 0.007154), highlighting a minimal explained variance in auto theft rates by these socioeconomic factors.
 
-```{r break-income-regression, echo=FALSE, fig.cap={"\\label{fig:break-regression-1}Correlation Analysis of Median Income and Break and Enter Rate in Toronto"}}
+```{r break-income-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:break-regression-1}Correlation Analysis of Median Income and Break and Enter Rate in Toronto"}}
 Break1 = ggplot(data=ct_data, aes(x=Income, y=Break_and_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Break and Enter Rate (per 1000 people)", title="Correlation between Median Income and Break and Enter Rate")
 
 Breakcor1 <- cor.test(ct_data$Break_and_rate, ct_data$Income, method=c("kendall"))
-print(Breakcor1)
+
+break_cor_results1 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(8.1694, scientific = FALSE),
+            format(3.099e-16, scientific = TRUE),
+            format(0.2290239, scientific = FALSE))
+)
+
+break_cor_table1 <- xtable(break_cor_results1, caption = "Kendall's Rank Correlation Test for Break and Enter Rate and Income")
+
+print(break_cor_table1, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+
 
 linearregBreak1 <- lm(Break_and_rate ~ Income, data = ct_data)
-summary(linearregBreak1)
+
+stargazer(linearregBreak1,
+          header = FALSE,
+          title = "Linear Regression Analysis for Break and Enter and Income")
+
 linearreggraphBreak1 <- Break1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=250)
 linearreggraphBreak1
 ```
-## The plot examines the link between median income and the rate of break and enters, standardized per 1000 people. The positive slope of the regression line indicates that higher median income levels might be associated with increased rates of break and entry, with the shaded area indicating the confidence interval around the regression estimate.
+*The plot examines the link between median income and the rate of break and enters, standardized per 1000 people. The positive slope of the regression line indicates that higher median income levels might be associated with increased rates of break and entry, with the shaded area indicating the confidence interval around the regression estimate.*
 
-```{r break-unemployment-regression, echo=FALSE, fig.cap={"\\label{fig:break-regression-2}Correlation Analysis of Unemployment and Break and Enter Rate in Toronto"}}
+```{r break-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:break-regression-2}Correlation Analysis of Unemployment and Break and Enter Rate in Toronto"}}
 Break2 = ggplot(data=ct_data, aes(x=Unemployme, y=Break_and_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Break and Enter Rate (per 1000 people)", title="Correlation between Unemployment Rate and Break and Enter Rate")
 
 Breakcor2 <- cor.test(ct_data$Break_and_rate, ct_data$Unemployme, method=c("kendall"))
-print(Breakcor2)
+
+break_cor_results2 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(-7.9239, scientific = FALSE),
+            format(2.302e-15, scientific = TRUE),
+            format(-0.2234618, scientific = FALSE))
+)
+
+break_cor_table2 <- xtable(break_cor_results2, caption = "Kendall's Rank Correlation Test for Break and Enter Rate and Unemployment Rate")
+
+print(break_cor_table1, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+
 
 linearregBreak2 <- lm(Break_and_rate ~ Unemployme, data = ct_data)
-summary(linearregBreak2)
+
+stargazer(linearregBreak2,
+          header = FALSE,
+          title = "Linear Regression Analysis for Break and Enter and Unemployment")
+
 linearreggraphBreak2 <- Break2 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=0, label.y=250)
 linearreggraphBreak2
 ```
-## The plot examines the relationship between the unemployment rate and the break and enter rate per 1000 people is analyzed. The regression line, showing a downward trend, suggests that higher unemployment rates may be associated with lower break and enter rates, but the broad confidence interval indicates substantial uncertainty in the prediction.
+*The plot examines the relationship between the unemployment rate and the break and enter rate per 1000 people is analyzed. The regression line, showing a downward trend, suggests that higher unemployment rates may be associated with lower break and enter rates, but the broad confidence interval indicates substantial uncertainty in the prediction.*
 
 The break and enter rates have a moderately positive, statistically significant association with income (tau = 0.229, p = 3.099e-16) and a moderately negative, statistically significant correlation with unemployment (tau = -0.223, p = 2.302e-15). The regression models show that both income (Estimate: 4.50e-05, p = 0.003356) and unemployment (Estimate: -3.0064, p = 6.968e-09) are moderate predictors with a linear relationship, with higher income associated with higher break and enter rates and higher unemployment leading to lower rates. However, the variation explained by both models remains low (adjusted R-squared = 0.01333 and 0.05583, respectively).
 
-```{r theft-over-income-regression, echo=FALSE, fig.cap={"\\label{fig:break-regression-1}Correlation Analysis of Median Income and Theft Over $5000 Rate in Toronto"}}
+```{r theft-over-income-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:break-regression-1}Correlation Analysis of Median Income and Theft Over $5000 Rate in Toronto"}}
 TheftOver1 = ggplot(data=ct_data, aes(x=Income, y=Theft_Over_rate))+geom_point(size=1)+labs(x="Median Income ($)", y="Theft Over $5000 Rate (per 1000 people)", title="Correlation between Median Income and Theft Over $5000 Rate")
 
 TheftOvercor1 <- cor.test(ct_data$Theft_Over_rate, ct_data$Income, method=c("kendall"))
-print(TheftOvercor1)
+
+theftover_cor_results1 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(2.8895, scientific = FALSE),
+            format(0.003859, scientific = FALSE),
+            format(0.08100849, scientific = FALSE))
+)
+
+theftover_cor_table1 <- xtable(theftover_cor_results1, caption = "Kendall's Rank Correlation Test for Theft Over 5000 Rate and Income")
+
+print(theftover_cor_table1, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+
 
 linearregTheftOver1 <- lm(Theft_Over_rate ~ Income, data = ct_data)
-summary(linearregTheftOver1)
+
+stargazer(linearregTheftOver1,
+          header = FALSE,
+          title = "Linear Regression Analysis for Theft Over 5000 and Income")
+
 linearreggraphTheftOver1 <- TheftOver1 + geom_smooth(method="lm", col="red") + stat_regline_equation(label.x=300000, label.y=150)
 linearreggraphTheftOver1
 ```
-## The scatter plot displays the correlation between median income and the rate of thefts over $5000 per 1000 people. The regression line shows an almost flat slope, indicating a negligible association between median income and high-value theft rates, with a confidence interval that reflects the estimate's imprecision.
+*The scatter plot displays the correlation between median income and the rate of thefts over $5000 per 1000 people. The regression line shows an almost flat slope, indicating a negligible association between median income and high-value theft rates, with a confidence interval that reflects the estimate's imprecision.*
 
-```{r theft-over-unemployment-regression, echo=FALSE, fig.cap={"\\label{fig:break-regression-2}Correlation Analysis of Unemployment Rate and Theft Over $5000 Rate in Toronto"}}
+```{r theft-over-unemployment-regression, echo=FALSE, results="asis", warning=FALSE, message=FALSE, fig.cap={"\\label{fig:break-regression-2}Correlation Analysis of Unemployment Rate and Theft Over $5000 Rate in Toronto"}}
 TheftOver2 = ggplot(data=ct_data, aes(x=Unemployme, y=Theft_Over_rate))+geom_point(size=1)+labs(x="Unemployment Rate (%)", y="Theft Over $5000 Rate (per 1000 people)", title="Correlation between Unemployment Rate and Theft Over $5000 Rate")
 
 TheftOvercor2 <- cor.test(ct_data$Theft_Over_rate, ct_data$Unemployme, method=c("kendall"))
-print(TheftOvercor2)
+
+theftover_cor_results2 <- data.frame(
+  Metric = c("z", "p-value", "tau"),
+  Value = c(format(-4.3097, scientific = FALSE),
+            format(1.635e-05, scientific = FALSE),
+            format(-0.1215417, scientific = FALSE))
+)
+
+theftover_cor_table2 <- xtable(theftover_cor_results2, caption = "Kendall's Rank Correlation Test for Theft Over 5000 Rate and Unemployment Rate")
+
+print(theftover_cor_table2, type = "latex", include.rownames = FALSE, comment = FALSE, caption.placement = "top")
+
 
 cubregTheftOver2 <- lm(Theft_Over_rate ~ poly(Unemployme, 3), data = ct_data)
-summary(cubregTheftOver2)
+
+stargazer(cubregTheftOver2,
+          header = FALSE,
+          title = "Linear Regression Analysis for Theft Over 5000 and Cubic-Transformed Unemployment")
+
 cubreggraphTheftOver2 <- TheftOver2 + geom_smooth(method = "lm", formula = y ~ poly(x, 3), col = "red") +
   stat_regline_equation(label.x=0, label.y=150)
 cubreggraphTheftOver2
 ```
-## This graph illustrates the connection between the unemployment rate and theft over $5000 rate per 1000 people. The downward slope of the cubic regression line implies a negative relationship, suggesting that areas with higher unemployment rates might experience lower rates of high-value thefts, though the extent of this association is not strongly determined, as seen by the wide confidence interval.
+*This graph illustrates the connection between the unemployment rate and theft over $5000 rate per 1000 people. The downward slope of the cubic regression line implies a negative relationship, suggesting that areas with higher unemployment rates might experience lower rates of high-value thefts, though the extent of this association is not strongly determined, as seen by the wide confidence interval.*
 
 Lastly, the rate of theft over $5000 has a weak, positive, and statistically significant correlation with income (tau = 0.081, p = 0.003859), however, the regression model shows that this relationship is not well-explained linearly. (p = 0.4396). Despite this, other types of polynomial or logarithmic transformation did not provide a better fit for the relationship between these two variables. Kendall’s tau correlation with unemployment is weak, negative, and statistically significant (tau = -0.1215, p = 1.635e-05), and the cubic relationship is effectively captured by the regression model (p = 5.478e-10). These relationships are still fairly weak, as shown in the respective adjusted R-squared values (-0.0007 and 0.07335).
 
@@ -482,6 +668,9 @@ This function specifies that for the distances d between neighbours, an exponent
 Each model uses a custom matrix defined by threshold and bandwidth values, with the optimal values for each found using the Akaike Information Criterion (AIC), which measures the best fit against the observed data. Threshold refers to the spatial extent within which neighbouring observations are considered for inclusion in the spatial weights matrix, and bandwidth refers to how the influence of an observation on its neighbour decays with increasing distance to the defined threshold. Both threshold and bandwidth are measured in meters, as established through the projection of the dataset into NAD 1983 UTM Zone 17N. The Akaike Information Criterion is useful for direct fit comparison across multiple models of the same data, where lower AIC values indicate a better model fit. Bandwidth was tested at intervals of 500m from a range of 0m to 3000m, and threshold was tested at intervals of 100m from a range of 2222m to 4000m, and the combination that produced the lowest AIC value was selected in each case. It is important to note that a threshold value of 2222m was the minimum required to run each model, to ensure that every census tract in the dataset had at least one neighbour.
 
 The results from Kendall’s tau correlation tests were used to define which variables, between income and unemployment, would be included for each model. Since Kendall’s correlation test is resistant to outliers, these tests were considered in selecting appropriate variables between income and unemployment when modeling. The results of regression analysis were used to consider the degree of transformation each variable would exhibit in each model, such as linear, quadratic, or logarithmic. In order to equally assess the impact of changes in the level of income and unemployment for the spatial lag models and curb outliers, the values of both income and unemployment were scaled to have a mean of 0 and a standard deviation of 1.
+
+\newpage
+
 
 ```{r lag-models, echo=FALSE}
 robbery_threshold <- 3100
@@ -561,6 +750,9 @@ ggplot(data = ct_data) +
 
 Figure \ref{fig:robbery-lag} shows the results of the spatial lag model predicting robbery rates in each census tract in Toronto. According to Kendall’s tau correlation, both Income (negative) and Unemployment (positive) have weak yet significant correlations on the rate of robbery in each census tract, thus both variables were included as predictors of robbery rate in the model. Based on the results of the regression analysis, income exhibits a logarithmic relationship with the robbery rate, while unemployment is characterized by a quadratic relationship. Due to this observation, income was included as a logarithmic predictor, and unemployment was included as a quadratic predictor to more accurately reflect the nonlinear relationship between these two variables and the observed robbery rate. The threshold and bandwidth chosen for this model were 3100m and 1500m, respectively, and the model produces an AIC value of 4779.4. The p-value of residual autocorrelation is 0.84716, indicating that the model accurately captures the spatial pattern present in the observed data.
 
+\newpage
+
+
 ```{r auto-lag-plot, echo=FALSE, fig.cap={"\\label{fig:auto-lag}Predicted Auto Theft Rate Using a Spatial Lag Model"}}
 ct_data$predicted_auto_theft_lag <- as.numeric(predict(auto_lag_model, newdata = ct_data, type = "response", listw = auto_listw))
 
@@ -581,6 +773,9 @@ ggplot(data = ct_data) +
 ```
 
 Figure \ref{fig:auto-lag} shows the results of the spatial lag model predicting auto theft rates in each census tract in Toronto. According to Kendall’s tau correlation, Income has a weak yet significant positive correlation on the rate of auto theft, while Unemployment does not have a statistically significant correlation on the rate of auto theft. Due to the lack of a significant correlation between Unemployment and the rate of auto theft, only Income was considered as a predictor on the rate of auto theft for each census tract. Based on the results of the regression analysis, income exhibits a linear relationship with the rate of auto theft, thus it was included as a linear predictor of auto theft to reflect the linear relationship between these two variables. The threshold and bandwidth chosen for this model was 2222m and 1500m, respectively, and the model produces an AIC value of 5405.5. The p-value of residual autocorrelation is 0.10876, indicating that the model somewhat accurately captures the spatial pattern present in the observed data.
+
+\newpage
+
 
 ```{r break-lag-plot, echo=FALSE, fig.cap={"\\label{fig:break-lag}Predicted Break and Enter Rate Using a Spatial Lag Model"}}
 ct_data$predicted_break_enter_lag <- as.numeric(predict(break_lag_model, newdata = ct_data, type = "response", listw = break_listw))
@@ -603,7 +798,12 @@ ggplot(data = ct_data) +
 
 Figure \ref{fig:break-lag} shows the results of the spatial lag model predicting break and enter rates in each census tract in Toronto. According to Kendall’s tau correlation, both income (positive) and unemployment (negative) have moderate, significant correlations on the rate of break and enter crimes in each census tract, thus both variables were included as predictors of break and enter rate in the model. Based on the results of the regression analysis, both income and unemployment exhibit linear relationships with the rate of break and enter crimes, thus both variables were included as linear predictors of break and enter crimes to reflect the linear relationship between these variables. The threshold and bandwidth chosen for this model was 3800m and 2000m, respectively, and the model produces an AIC value of 5562. The p-value of residual autocorrelation is 0.093364, indicating that the model somewhat accurately captures the spatial pattern present in the observed data.
 
+\newpage
+
+
 ```{r theft-over-lag-plot, echo=FALSE, fig.cap={"\\label{fig:theft-over-lag}Predicted Theft Over $5000 Rate Using a Spatial Lag Model"}}
+ct_data$predicted_theft_over_lag <- as.numeric(predict(theft_over_lag_model, newdata = ct_data, type = "response", listw = theft_over_listw))
+
 ggplot(data = ct_data) +
   geom_sf(aes(fill = predicted_theft_over_lag), color = "black", size = 0.1) +
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = scales::comma, limits = c(0, max(ct_data$predicted_theft_over_lag, na.rm = TRUE))) +
